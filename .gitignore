@@ -3,6 +3,8 @@
 ##
 ## Get latest from https://github.com/github/gitignore/blob/main/VisualStudio.gitignore
 
+# our PSQL connection information
+EksamensProjektAPI/DbConnectionInfo.cs
 # User-specific files
 *.DS_Store
 .DS_Store
