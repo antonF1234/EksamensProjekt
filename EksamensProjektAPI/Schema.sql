@@ -1,0 +1,79 @@
+﻿-- Drop table if exists else create them
+DROP TABLE IF EXISTS tasks_skills CASCADE;
+DROP TABLE IF EXISTS users_skills CASCADE;
+DROP TABLE IF EXISTS users_projects CASCADE;
+DROP TABLE IF EXISTS tasks CASCADE;
+DROP TABLE IF EXISTS skills CASCADE;
+DROP TABLE IF EXISTS projects CASCADE;
+DROP TABLE IF EXISTS users CASCADE;
+
+
+-- USERS
+CREATE TABLE users (
+                       user_id     SERIAL PRIMARY KEY,
+                       username    VARCHAR(50) NOT NULL UNIQUE,
+                       password    VARCHAR(255) NOT NULL,
+                       email       VARCHAR(255) NOT NULL UNIQUE,
+                       is_admin    BOOLEAN NOT NULL DEFAULT FALSE
+);
+
+
+-- PROJECTS
+CREATE TABLE projects (
+                          project_id  SERIAL PRIMARY KEY,
+                          name        TEXT NOT NULL,
+                          description TEXT,
+                          deadline    DATE,
+                          status      VARCHAR(20)
+);
+
+-- USERS_PROJECTS (many-to-many)
+CREATE TABLE users_projects (
+                                user_project SERIAL PRIMARY KEY,
+                                user_id      INT REFERENCES users(user_id) ON DELETE CASCADE,
+                                project_id   INT REFERENCES projects(project_id) ON DELETE CASCADE
+);
+
+-- index for fast lookup
+CREATE INDEX idx_users_projects_user ON users_projects(user_id);
+CREATE INDEX idx_users_projects_project ON users_projects(project_id);
+
+
+-- TASKS
+CREATE TABLE tasks (
+                       task_id          SERIAL PRIMARY KEY,
+                       name             TEXT NOT NULL,
+                       start_date       DATE,
+                       deadline         DATE,
+                       completion_date  DATE,
+                       status           VARCHAR(20),
+                       project_id       INT NOT NULL REFERENCES projects(project_id) ON DELETE CASCADE
+);
+
+-- SKILLS
+CREATE TABLE skills (
+                        skill_id SERIAL PRIMARY KEY,
+                        name     TEXT NOT NULL UNIQUE
+);
+
+
+-- USERS_SKILLS (many-to-many)
+CREATE TABLE users_skills (
+                              employee_skill_id SERIAL PRIMARY KEY,
+                              employee_id       INT REFERENCES users(user_id) ON DELETE CASCADE,
+                              skill_id          INT REFERENCES skills(skill_id) ON DELETE CASCADE
+);
+
+CREATE INDEX idx_users_skills_user ON users_skills(employee_id);
+CREATE INDEX idx_users_skills_skill ON users_skills(skill_id);
+
+
+-- TASKS_SKILLS (many-to-many)
+CREATE TABLE tasks_skills (
+                              employee_skill_id SERIAL PRIMARY KEY,
+                              employee_id       INT REFERENCES users(user_id) ON DELETE CASCADE,
+                              skill_id          INT REFERENCES skills(skill_id) ON DELETE CASCADE
+);
+
+CREATE INDEX idx_tasks_skills_user ON tasks_skills(employee_id);
+CREATE INDEX idx_tasks_skills_skill ON tasks_skills(skill_id);
