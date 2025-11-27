@@ -1,0 +1,47 @@
+﻿@page "/login"
+@using EksamensProjekt.Models
+@inject UserRepo Users
+@inject AuthState Auth
+@inject Blazored.LocalStorage.ILocalStorageService LS
+@inject NavigationManager Nav
+@rendermode InteractiveServer
+
+<h3>Login</h3>
+
+<input @bind="username" placeholder="Brugernavn" />
+<br />
+<input type="password" @bind="password" placeholder="Kode" />
+<br />
+<button @onclick="DoLogin">Login</button>
+
+<p>@msg</p>
+
+@code {
+    string username = "";
+    string password = "";
+    string msg = "";
+
+    async Task DoLogin()
+    {
+        // fetch user info by using username
+        var user = await Users.GetByUsernameAsync(username);
+        if (user == null || !BCrypt.Net.BCrypt.Verify(password, user.Password))
+        {
+            msg = "Forkert brugernavn eller kode";
+            return;
+        }
+        // we need 3 things, username, id and isadmin
+        Auth.CurrentUser = user.Username;
+        Auth.UserId = user.UserId;
+        Auth.IsAdmin = user.IsAdmin;
+
+        // take the data from the database and place it in localstorare for that user
+        await LS.SetItemAsync("loggedin", user.Username);
+        await LS.SetItemAsync("userid", user.UserId);
+        await LS.SetItemAsync("isadmin", user.IsAdmin);
+        
+        // finaly navigate to /
+        Nav.NavigateTo("/");
+    }
+
+}

@@ -1,0 +1,32 @@
+﻿@page "/register"
+@using EksamensProjekt.Models
+@inject UserRepo Users
+@inject NavigationManager Nav
+@rendermode InteractiveServer
+
+<h3>Register</h3>
+<input @bind="username" placeholder="Brugernavn" /><br />
+<input @bind="email" placeholder="Email" /><br />
+<input @bind="password" type="password" placeholder="Kode" /><br />
+<input type="checkbox" @bind="isAdmin" id="isAdminCheckbox" />
+<label for="isAdminCheckbox">Administrator</label><br />
+<button type="button" @onclick="RegisterUser">Opret</button>
+
+@code {
+    string username = "";
+    string email = "";
+    string password = "";
+    bool isAdmin = false; // start with false for isadmin
+
+    async Task RegisterUser()
+    {
+        var user = new UserModel();
+        user.Username = username;
+        user.Email = email;
+        user.Password = BCrypt.Net.BCrypt.HashPassword(password);
+        user.IsAdmin = isAdmin; // use the value from the checkbox
+
+        await Users.InsertAsync(user);
+        Nav.NavigateTo("/login");
+    }
+}
