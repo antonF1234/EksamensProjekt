@@ -18,7 +18,10 @@ public class AuthController(UserService userService) : ControllerBase
     public async Task<IActionResult> Login(LoginDto dto)
     {
         var user = await userService.LoginAsync(dto.Username, dto.Password);
-        return user is not null ? Ok(user) : Unauthorized();
+        if (user == null) 
+            return Unauthorized();
+
+        return Ok();
     }
 }
 

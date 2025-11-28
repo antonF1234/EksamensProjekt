@@ -6,14 +6,14 @@ public class UserService
 {
     private readonly UserRepo _repo;
 
-    public UserService(UserRepo repo) // user repo is injected into the constructor
+    public UserService(UserRepo repo) // user repo is into the constructor
     {
         _repo = repo;
     }
 
     public async Task RegisterAsync(string username, string password, string email, bool isadmin)
     {
-        var hash = BCrypt.Net.BCrypt.HashPassword(password);// uses password parra meter from the function to hash the password
+        var hash = BCrypt.Net.BCrypt.HashPassword(password);// uses password parameter from the function to hash the password
         var user = new UserModel // creates a new user, uses the password hash as the password, this happens client side
         {
             Username = username,
