@@ -15,8 +15,4 @@
       <ProjectReference Include="..\EksamensProjektAPI\EksamensProjektAPI.csproj" />
     </ItemGroup>
 
-    <ItemGroup>
-      <Folder Include="Services\" />
-    </ItemGroup>
-
 </Project>
