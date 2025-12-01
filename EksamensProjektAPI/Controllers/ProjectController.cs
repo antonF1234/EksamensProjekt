@@ -7,7 +7,7 @@ using EksamensProjektAPI.Services; //vores Projectservice
 namespace EksamensProjektAPI.Controllers;
 
 [ApiController] // gør det til en rigtig web-API controller
-[Route("api/[controller]")] //alle endpoints starter med /api/projects
+[Route("api")] //alle endpoints starter med /api
 public class ProjectController : ControllerBase
 {
     private readonly ProjectService _projectService; //Depency Injection - får ProjectService "insprøjtet" auto
@@ -17,21 +17,24 @@ public class ProjectController : ControllerBase
         _projectService = projectservice; //gemmer servicen, så den kan bruges i metoden
     }
 
-    [HttpPost("api/projects")] //Opret nyt projekt , Blazor kalder denne når bruger trykker "Opret projekt"
-    public async Task Create(ProjectModel model)
+    [HttpPost ("projects")] //Opret nyt projekt , Blazor kalder denne når bruger trykker "Opret projekt"
+    public async Task<IActionResult> Create(ProjectModel model)
     {
-        var project = new ProjectModel();
-        project.Name = model.Name;
-        project.Description = model.Description;
-        project.Deadline = model.Deadline;
-        await _projectService.CreateAsync(project);
+        var project = new ProjectModel
+        {
+            Name = model.Name,
+            Description = model.Description,
+            Deadline = model.Deadline,
+        };
+        await _projectService.CreateAsync(project); // sender projektet til servicen;
+        return Ok(project);
     }
 
-    [HttpGet] // GET - hent alle projekter , fx til at vise projektlisten på forisden
+    [HttpGet("all")] // GET - hent alle projekter , fx til at vise projektlisten på forisden
     public async Task<IActionResult> GetAll()
     {
-        var projects = _projectService.GetAllAsync(); //henter alle fra databasen
-        return Ok(projects);                               // statuskode 200 + sender listen tilbage
+        var projects = await _projectService.GetAllAsync(); //henter alle fra databasen
+        return Ok(projects);                           // statuskode 200 + sender listen tilbage
     }
 
     [HttpGet("{id}")] // hent et specifikt projekt med id = 5

@@ -83,23 +83,5 @@ public class ProjectRepo
         await using var cmd = new NpgsqlCommand(
             @"INSERT INTO projects (name, description, deadline, status)
               VALUES (@name, @desc, @deadline, 'Ny')", conn);
-
-        // Navn er altid udfyldt
-        cmd.Parameters.AddWithValue("name", project.Name);
-
-        // Beskrivelse: Tjek om det er null → send DBNull.Value hvis det er tom
-        if (project.Description == null)
-            cmd.Parameters.AddWithValue("desc", DBNull.Value);
-        else
-            cmd.Parameters.AddWithValue("desc", project.Description);
-
-        // Deadline: Tjek om der er valgt en dato
-        if (project.Deadline == null)
-            cmd.Parameters.AddWithValue("deadline", DBNull.Value);
-        else
-            cmd.Parameters.AddWithValue("deadline", project.Deadline.Value);
-
-        // Udfører INSERT-kommandoen (ExecuteNonQuery = ingen rækker returneres)
-        await cmd.ExecuteNonQueryAsync();
     }
 }

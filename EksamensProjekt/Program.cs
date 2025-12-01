@@ -1,6 +1,7 @@
 using Blazored.LocalStorage;
 using EksamensProjekt.Components;
 using EksamensProjekt.Models;
+using EksamensProjektAPI.Services;
 
 
 var builder = WebApplication.CreateBuilder(args);
@@ -8,11 +9,10 @@ var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddSingleton<UserRepo>();
 builder.Services.AddScoped<AuthState>();
+builder.Services.AddScoped<ProjectService>();
+builder.Services.AddScoped<ProjectRepo>();
 builder.Services.AddBlazoredLocalStorage();
 builder.Services.AddHttpClient();
-
-
-
 
 // Add services to the container.
 builder.Services.AddRazorComponents()

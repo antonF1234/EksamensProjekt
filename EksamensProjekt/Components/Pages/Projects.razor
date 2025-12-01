@@ -112,7 +112,7 @@ else
     // Henter projekter fra API’et (bliver brugt flere gange)
     private async Task LoadProjects()
     {
-        projects = await Http.GetFromJsonAsync<List<ProjectModel>>("api/projects") 
+        projects = await Http.GetFromJsonAsync<List<ProjectModel>>("api/all") 
                    ?? new List<ProjectModel>();
     }
 
