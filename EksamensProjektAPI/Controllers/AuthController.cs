@@ -5,24 +5,23 @@ namespace EksamensProjektAPI.Controllers;
 
 [ApiController]
 [Route("api/auth")]
-public class AuthController : ControllerBase
+public class AuthController(UserService userService) : ControllerBase
 {
-    private readonly UserService _userService;
-
-    public AuthController(UserService userService) => _userService = userService;
-
     [HttpPost("register")]
     public async Task<IActionResult> Register(RegisterDto dto)
     {
-        await _userService.RegisterAsync(dto.Username, dto.Password, dto.Email, dto.IsAdmin);
+        await userService.RegisterAsync(dto.Username, dto.Password, dto.Email, dto.IsAdmin);
         return Ok();
     }
 
     [HttpPost("login")]
     public async Task<IActionResult> Login(LoginDto dto)
     {
-        var user = await _userService.LoginAsync(dto.Username, dto.Password);
-        return user is not null ? Ok(user) : Unauthorized();
+        var user = await userService.LoginAsync(dto.Username, dto.Password);
+        if (user == null) 
+            return Unauthorized();
+
+        return Ok();
     }
 }
 
