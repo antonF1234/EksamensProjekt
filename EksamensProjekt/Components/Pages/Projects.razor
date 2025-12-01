@@ -1,0 +1,137 @@
+@page "/projects"  
+@using EksamensProjekt.Models
+@inject HttpClient Http                             
+@inject NavigationManager Nav                        
+@rendermode InteractiveServer 
+
+
+
+<PageTitle>Projekter</PageTitle>
+
+<h3 class="mb-4">Alle projekter</h3>
+
+
+<div class="card mb-4 border-primary">
+    <div class="card-body">
+        <h5 class="card-title text-primary">Opret nyt projekt</h5>
+
+        <!-- Formular til at lave et nyt projekt -->
+        <EditForm Model="newProject" OnValidSubmit="CreateProject">
+            <div class="row g-3 align-items-center">
+                <!-- Navn på projektet (skal udfyldes) -->
+                <div class="col-md-4">
+                    <InputText @bind-Value="newProject.Name" 
+                               class="form-control" 
+                               placeholder="Projektnavn (skal udfyldes)" />
+                </div>
+
+                <!-- Deadline – man kan vælge en dato -->
+                <div class="col-md-3">
+                    <InputDate @bind-Value="newProject.Deadline" 
+                               class="form-control" />
+                    <small class="text-muted">Deadline (valgfri)</small>
+                </div>
+
+                <!-- Knap til at oprette projektet -->
+                <div class="col-md-2">
+                    <button type="submit" class="btn btn-success w-100">Opret projekt</button>
+                </div>
+            </div>
+
+            <!-- Beskrivelse – en lille tekstboks -->
+            <div class="mt-3">
+                <InputTextArea @bind-Value="newProject.Description" 
+                               class="form-control" 
+                               rows="2" 
+                               placeholder="Kort beskrivelse (valgfri)" />
+            </div>
+        </EditForm>
+    </div>
+</div>
+
+
+@if (projects == null)
+{
+    <p>Henter projekter fra databasen...</p>                 @* Vises mens vi venter på svar *@
+}
+else if (projects.Count == 0)
+{
+    <div class="alert alert-info">Der er ingen projekter endnu – opret det første ovenfor!</div>
+}
+else
+{
+    <!-- Alle projekter vises som flotte kort -->
+    <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4">
+        @foreach (var p in projects)
+        {
+            <div class="col">
+                <div class="card h-100 shadow-sm">
+                    <div class="card-body">
+                        <!-- Projektnavn -->
+                        <h5 class="card-title">@p.Name</h5>
+
+                        <!-- Beskrivelse – vises kun hvis der er en -->
+                        @if (!string.IsNullOrEmpty(p.Description))
+                        {
+                            <p class="card-text text-muted small">@p.Description</p>
+                        }
+
+                        <!-- Deadline og status -->
+                        <p class="card-text mb-2">
+                            <strong>Deadline:</strong> 
+                            @(p.Deadline?.ToString("dd-MM-yyyy") ?? "Ikke sat")
+                        </p>
+                        <p class="card-text">
+                            <strong>Status:</strong> 
+                            <span class="badge bg-primary">
+                                @(p.Status ?? "Ny")
+                            </span>
+                        </p>
+
+                      
+                    </div>
+
+                    <!-- Lille footer med ID (kun til jer selv) -->
+                    <div class="card-footer text-muted small">
+                        ID: @p.ProjectId
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+}
+
+@code {
+    // Liste med alle projekter fra databasen
+    private List<ProjectModel> projects = new();
+
+    // Nyt projekt man er ved at lave
+    private ProjectModel newProject = new();
+    
+
+    // Henter projekter fra API’et (bliver brugt flere gange)
+    private async Task LoadProjects()
+    {
+        projects = await Http.GetFromJsonAsync<List<ProjectModel>>("api/projects") 
+                   ?? new List<ProjectModel>();
+    }
+
+    // Når man trykker "Opret projekt"
+    private async Task CreateProject()
+    {
+        // Tjek at der er skrevet et navn
+        if (string.IsNullOrWhiteSpace(newProject.Name))
+            return;
+
+        // Send det nye projekt til API’et
+        var response = await Http.PostAsJsonAsync("api/projects", newProject);
+
+        if (response.IsSuccessStatusCode)
+        {
+            newProject = new ProjectModel();   // Nulstil formularen
+            await LoadProjects();              // Opdater listen med det nye projekt
+        }
+    }
+
+   
+}

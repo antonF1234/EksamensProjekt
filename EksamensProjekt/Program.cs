@@ -2,6 +2,7 @@ using Blazored.LocalStorage;
 using EksamensProjekt.Components;
 using EksamensProjekt.Models;
 
+
 var builder = WebApplication.CreateBuilder(args);
 
 
