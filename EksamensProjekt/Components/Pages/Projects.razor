@@ -1,15 +1,45 @@
-@page "/projects"  
+@page "/projects"
+@inject NavigationManager Nav
 @using EksamensProjekt.Models
-@inject HttpClient Http                             
-@inject NavigationManager Nav                        
-@rendermode InteractiveServer 
+@using EksamensProjektAPI.Services
+@rendermode InteractiveServer
+@inject HttpClient Http
 
+@inject ProjectRepo _Projects
 
+<EditForm Model="newProject" OnValidSubmit="CreateProject">
+    <DataAnnotationsValidator />
+    <div class="mb-3">
+        <label class="form-label">Navn</label>
+        <InputText class="form-control" @bind-Value="newProject.Name" />
+    </div>
+    <div class="mb-3">
+        <label class="form-label">Beskrivelse</label>
+        <InputTextArea class="form-control" @bind-Value="newProject.Description" />
+    </div>
+    <div class="mb-3">
+        <label class="form-label">Deadline</label>
+        <InputDate class="form-control" @bind-Value="newProject.Deadline" />
+    </div>
+    <div class="mb-3">
+        <label class="form-label">Status</label>
+        <InputText class="form-control" @bind-Value="newProject.Status" />
+    </div>
+    <button class="btn btn-primary" type="submit">Opret projekt</button>
+</EditForm>
 
-<PageTitle>Projekter</PageTitle>
+@code {
+    private ProjectModel newProject = new();
+
+    private async Task CreateProject()
+    {
+        await _Projects.InsertAsync(newProject);
+        newProject = new ProjectModel();
+        await LoadProjects();
+    }
+}
 
 <h3 class="mb-4">Alle projekter</h3>
-
 
 
 @if (projects == null)
@@ -40,23 +70,21 @@ else
 
                         <!-- Deadline og status -->
                         <p class="card-text mb-2">
-                            <strong>Deadline:</strong> 
+                            <strong>Deadline:</strong>
                             @(p.Deadline?.ToString("dd-MM-yyyy") ?? "Ikke sat")
                         </p>
                         <p class="card-text">
-                            <strong>Status:</strong> 
+                            <strong>Status:</strong>
                             <span class="badge bg-primary">
                                 @(p.Status ?? "Ny")
                             </span>
                         </p>
-
-                      
                     </div>
 
-                    <!-- Lille footer med ID (kun til jer selv) -->
                     <div class="card-footer text-muted small">
                         ID: @p.ProjectId
                     </div>
+
                 </div>
             </div>
         }
@@ -68,8 +96,7 @@ else
     {
         await LoadProjects();
     }
-
-
+    
     // Liste med alle projekter fra databasen
     private List<ProjectModel> projects = new();
     
@@ -77,7 +104,10 @@ else
     private async Task LoadProjects()
     {
         projects = await Http.GetFromJsonAsync<List<ProjectModel>>("api/all");
+        if (projects == null)
+        {
+            projects = new List<ProjectModel>();
+        }
+
     }
-    
-   
 }
