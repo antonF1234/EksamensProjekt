@@ -14,6 +14,12 @@ builder.Services.AddScoped<ProjectRepo>();
 builder.Services.AddBlazoredLocalStorage();
 builder.Services.AddHttpClient();
 
+builder.Services.AddScoped(sp => new HttpClient
+{
+    BaseAddress = new Uri("http://localhost:5223/")
+});
+
+
 // Add services to the container.
 builder.Services.AddRazorComponents()
     .AddInteractiveServerComponents();
