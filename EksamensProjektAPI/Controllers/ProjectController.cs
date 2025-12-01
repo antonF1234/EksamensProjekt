@@ -20,13 +20,15 @@ public class ProjectController : ControllerBase
     [HttpPost ("projects")] //Opret nyt projekt , Blazor kalder denne når bruger trykker "Opret projekt"
     public async Task<IActionResult> Create(ProjectModel model)
     {
+        int uid = 1; // vi var nød til at kalde det et eller andet
         var project = new ProjectModel
         {
             Name = model.Name,
             Description = model.Description,
             Deadline = model.Deadline,
         };
-        await _projectService.CreateAsync(project); // sender projektet til servicen;
+        
+        await _projectService.CreateAsync(project, uid); // sender projektet til servicen;
         return Ok(project);
     }
 

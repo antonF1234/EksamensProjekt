@@ -2,6 +2,7 @@
 @inject NavigationManager Nav
 @using EksamensProjekt.Models
 @using EksamensProjektAPI.Services
+@inject Blazored.LocalStorage.ILocalStorageService LS
 @rendermode InteractiveServer
 @inject HttpClient Http
 
@@ -29,14 +30,17 @@
 </EditForm>
 
 @code {
+
     private ProjectModel newProject = new();
 
     private async Task CreateProject()
     {
-        await _Projects.InsertAsync(newProject);
+        int uid = await LS.GetItemAsync<int>("userid");
+        await _Projects.InsertAsync(newProject, uid);
         newProject = new ProjectModel();
         await LoadProjects();
     }
+
 }
 
 <h3 class="mb-4">Alle projekter</h3>

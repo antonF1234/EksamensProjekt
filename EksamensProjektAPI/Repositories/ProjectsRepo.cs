@@ -57,19 +57,32 @@ public class ProjectRepo
         };
     }
 
-    public async Task InsertAsync(ProjectModel project)
+    public async Task InsertAsync(ProjectModel project, int userId)
     {
         await using var conn = new NpgsqlConnection(Conn);
         await conn.OpenAsync();
 
+        // 1. Indsæt projekt
         await using var cmd = new NpgsqlCommand(
-            "INSERT INTO projects (name, description, deadline, status) VALUES (@name, @desc, @deadline, @status)", conn);
+            "INSERT INTO projects (name, description, deadline, status) VALUES (@name, @desc, @deadline, @status) RETURNING project_id",
+            conn);
 
         cmd.Parameters.AddWithValue("name", project.Name);
-        cmd.Parameters.AddWithValue("desc", project.Description);
-        cmd.Parameters.AddWithValue("deadline", project.Deadline);
-        cmd.Parameters.AddWithValue("status", project.Status);
+        cmd.Parameters.AddWithValue("desc", (object?)project.Description ?? DBNull.Value);
+        cmd.Parameters.AddWithValue("deadline", (object?)project.Deadline ?? DBNull.Value);
+        cmd.Parameters.AddWithValue("status", (object?)project.Status ?? "Ny");
 
-        await cmd.ExecuteNonQueryAsync();
+        int projectId = (int)await cmd.ExecuteScalarAsync();
+
+        // 2. Link til brugeren
+        await using var cmd2 = new NpgsqlCommand(
+            "INSERT INTO users_projects (user_id, project_id) VALUES (@userId, @projectId)",
+            conn);
+
+        cmd2.Parameters.AddWithValue("userId", userId);
+        cmd2.Parameters.AddWithValue("projectId", projectId);
+
+        await cmd2.ExecuteNonQueryAsync();
     }
+
 }
