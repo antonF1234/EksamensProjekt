@@ -85,4 +85,18 @@ public class ProjectRepo
         await cmd2.ExecuteNonQueryAsync();
     }
 
+    public async Task DeleteAsync(ProjectModel project)
+    {
+        await using var conn = new NpgsqlConnection(Conn);
+        await conn.OpenAsync();
+
+        // 1. slet  projekt
+        await using var cmd = new NpgsqlCommand(
+            "DELETE FROM projects WHERE project_id = @pid",
+            conn);
+
+        cmd.Parameters.AddWithValue("pid", project.ProjectId);
+        
+        await cmd.ExecuteNonQueryAsync();
+    }
 }

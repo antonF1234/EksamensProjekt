@@ -48,4 +48,30 @@ public class ProjectController : ControllerBase
                                                             // hvis det findes - 200 ok + projektet
                                                             // 201 betyder " jeg har lige lavet noget nyt og her er det fx nyt projekt"
     }
+
+    /*[HttpPut("update/{id}")]
+    public async Task<IActionResult> Update(int id, ProjectModel model)
+    {
+        var project = await _projectService.GetByIdAsync(id);
+        if (project == null) return NotFound();
+
+        project.Name = model.Name;
+        project.Description = model.Description;
+        project.Deadline = model.Deadline;
+        project.Status = model.Status;
+
+        await _projectService.UpdateAsync(project);
+        return Ok();
+    }*/
+
+    [HttpDelete("delete/{id}")]
+    public async Task<IActionResult> Delete(int id)
+
+    {
+        var project = await _projectService.GetByIdAsync(id);
+        if (project == null) return NotFound();
+
+        await _projectService.DeleteAsync(project);
+        return Ok();
+    }
 }

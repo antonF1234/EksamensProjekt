@@ -5,6 +5,7 @@
 @inject Blazored.LocalStorage.ILocalStorageService LS
 @rendermode InteractiveServer
 @inject HttpClient Http
+@inject IJSRuntime JS
 
 @inject ProjectRepo _Projects
 
@@ -27,6 +28,8 @@
         <InputText class="form-control" @bind-Value="newProject.Status" />
     </div>
     <button class="btn btn-primary" type="submit">Opret projekt</button>
+
+
 </EditForm>
 
 @code {
@@ -47,6 +50,7 @@
 
 
 @if (projects == null)
+    
 {
     <p>Henter projekter fra databasen...</p>                 @* Vises mens vi venter på svar *@
 }
@@ -92,6 +96,7 @@ else
                     <button class="btn btn-outline-primary btn-sm mt-2" @onclick="() => OpenTaskModal(p)">
                         Vis tasks
                     </button>
+                    <button class="btn-danger" @onclick="() => DeleteProject(p.ProjectId)">Slet</button>
 
 
                 </div>
@@ -149,16 +154,22 @@ else
                        ?? new List<TaskModel>();
     }
 
+    private async Task DeleteProject(int pid) //tager projectid (Ln 98, bt class DeleteP) og kalder endpoint
+    {
+        bool confirmed = await JS.InvokeAsync<bool>("confirm", "Er du sikker på du vil slette dette projekt");
+        if (confirmed) //pop up vindue
+        {
+            await Http.DeleteAsync($"api/delete/{pid}"); //sletter med det samme
+            await LoadProjects(); //genindlæs projektet
+        }
+    }
+
     private void CloseTaskModal()
     {
         selectedProject = null;
         projectTasks.Clear();
         showTaskModal = false;
     }
-
-    
-    
-    
     
     protected override async Task OnInitializedAsync()
     {

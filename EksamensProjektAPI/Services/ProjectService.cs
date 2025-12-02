@@ -14,4 +14,7 @@ public class ProjectService
     
     public async Task<ProjectModel?> GetByIdAsync(int id)
         => await _repo.GetByIdAsync(id);
+    
+    public async Task DeleteAsync(ProjectModel p)
+        => await _repo.DeleteAsync(p);
 }
