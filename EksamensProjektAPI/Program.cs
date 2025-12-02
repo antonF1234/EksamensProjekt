@@ -9,6 +9,8 @@ builder.Services.AddControllers();
 builder.Services.AddOpenApi();
 builder.Services.AddScoped<ProjectService>();
 builder.Services.AddScoped<ProjectRepo>();
+builder.Services.AddScoped<TaskRepo>();
+builder.Services.AddScoped<TaskService>();
 
 
 var app = builder.Build();

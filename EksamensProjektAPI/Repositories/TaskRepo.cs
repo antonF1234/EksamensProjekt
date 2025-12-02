@@ -6,75 +6,81 @@ namespace EksamensProjektAPI.Services;
 public class TaskRepo
 {
     private string Conn => DbConnectionInfo.ConnectionString;
-    
+
+    // GET alle tasks
     public async Task<List<TaskModel>> GetAllAsync()
     {
         await using var conn = new NpgsqlConnection(Conn);
         await conn.OpenAsync();
 
         await using var cmd = new NpgsqlCommand(
-            "SELECT task_id, name, start_date, deadline, completion_date, status, project_id FROM task ORDER BY task_id", conn);
+            "SELECT task_id, name, start_date, deadline, completion_date, status, project_id FROM tasks ORDER BY task_id",
+            conn);
 
         await using var reader = await cmd.ExecuteReaderAsync();
-        var projects = new List<TaskModel>();
+        var tasks = new List<TaskModel>();
 
         while (await reader.ReadAsync())
         {
-            projects.Add(new TaskModel
+            tasks.Add(new TaskModel
             {
                 TaskId = reader.GetInt32(0),
                 Name = reader.GetString(1),
-                StartDate = reader.GetDateTime(2),
-                Deadline =  reader.GetDateTime(3),
-                CompletionDate = reader.GetDateTime(4),
-                Status = reader.GetString(4),
-                ProjectId = reader.GetInt32(5)
+                StartDate = reader.IsDBNull(2) ? null : reader.GetDateTime(2),
+                Deadline = reader.IsDBNull(3) ? null : reader.GetDateTime(3),
+                CompletionDate = reader.IsDBNull(4) ? null : reader.GetDateTime(4),
+                Status = reader.IsDBNull(5) ? null : reader.GetString(5),
+                ProjectId = reader.GetInt32(6)
             });
         }
 
-        return projects;
+        return tasks;
     }
-    public async Task<TaskModel?> GetByIdAsync(int pid)
+
+    // GET en task
+    public async Task<TaskModel?> GetByIdAsync(int tid)
     {
         await using var conn = new NpgsqlConnection(Conn);
         await conn.OpenAsync();
 
         await using var cmd = new NpgsqlCommand(
-                "SELECT task_id, name, start_date, deadline, completion_date, status, project_id FROM task ORDER BY project_id= @pid", conn);
-        cmd.Parameters.AddWithValue("id", pid);
+            "SELECT task_id, name, start_date, deadline, completion_date, status, project_id FROM tasks WHERE task_id = @id",
+            conn);
+
+        cmd.Parameters.AddWithValue("id", tid);
 
         await using var reader = await cmd.ExecuteReaderAsync();
-        await reader.ReadAsync();
-
-        if (!reader.HasRows) return null;
+        if (!await reader.ReadAsync()) return null;
 
         return new TaskModel
         {
             TaskId = reader.GetInt32(0),
             Name = reader.GetString(1),
-            StartDate = reader.GetDateTime(2),
-            Deadline =  reader.GetDateTime(3),
-            CompletionDate = reader.GetDateTime(4),
-            Status = reader.GetString(4),
-            ProjectId = reader.GetInt32(5)
+            StartDate = reader.IsDBNull(2) ? null : reader.GetDateTime(2),
+            Deadline = reader.IsDBNull(3) ? null : reader.GetDateTime(3),
+            CompletionDate = reader.IsDBNull(4) ? null : reader.GetDateTime(4),
+            Status = reader.IsDBNull(5) ? null : reader.GetString(5),
+            ProjectId = reader.GetInt32(6)
         };
     }
-    
+
+    // POST – indsæt task
     public async Task InsertAsync(TaskModel task)
     {
         await using var conn = new NpgsqlConnection(Conn);
         await conn.OpenAsync();
 
-        // 1. Indsæt task
         await using var cmd = new NpgsqlCommand(
             "INSERT INTO tasks (name, start_date, deadline, completion_date, status, project_id) VALUES (@name, @start_date, @deadline, @completion_date, @status, @project_id)",
             conn);
 
         cmd.Parameters.AddWithValue("name", task.Name);
-        cmd.Parameters.AddWithValue("desc", (object?)task.StartDate ?? DBNull.Value);
+        cmd.Parameters.AddWithValue("start_date", (object?)task.StartDate ?? DBNull.Value);
         cmd.Parameters.AddWithValue("deadline", (object?)task.Deadline ?? DBNull.Value);
         cmd.Parameters.AddWithValue("completion_date", (object?)task.CompletionDate ?? DBNull.Value);
         cmd.Parameters.AddWithValue("status", (object?)task.Status ?? "Ny");
         cmd.Parameters.AddWithValue("project_id", task.ProjectId);
+
+        await cmd.ExecuteNonQueryAsync();
     }
 }
