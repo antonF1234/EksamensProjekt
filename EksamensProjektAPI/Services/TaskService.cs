@@ -13,6 +13,9 @@ public class TaskService
     
     public async Task<List<TaskModel>> GetAllAsync()
         => await _repo.GetAllAsync();
+
+    public async Task<List<TaskModel>> GetByProjectIdAsync(int projectId)
+        => await _repo.GetByProjectIdAsync(pid: projectId);
     
     public async Task<TaskModel?> GetByIdAsync(int id)
         => await _repo.GetByIdAsync(id);

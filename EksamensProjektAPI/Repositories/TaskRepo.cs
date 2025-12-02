@@ -63,6 +63,37 @@ public class TaskRepo
             ProjectId = reader.GetInt32(6)
         };
     }
+    
+    public async Task<List<TaskModel>> GetByProjectIdAsync(int pid)
+    {
+        await using var conn = new NpgsqlConnection(Conn);
+        await conn.OpenAsync();
+
+        await using var cmd = new NpgsqlCommand(
+            "SELECT task_id, name, start_date, deadline, completion_date, status, project_id FROM tasks WHERE project_id = @pid ORDER BY project_id",
+            conn);
+        
+        cmd.Parameters.AddWithValue("pid", pid);
+
+        await using var reader = await cmd.ExecuteReaderAsync();
+        var tasks = new List<TaskModel>();
+
+        while (await reader.ReadAsync())
+        {
+            tasks.Add(new TaskModel
+            {
+                TaskId = reader.GetInt32(0),
+                Name = reader.GetString(1),
+                StartDate = reader.IsDBNull(2) ? null : reader.GetDateTime(2),
+                Deadline = reader.IsDBNull(3) ? null : reader.GetDateTime(3),
+                CompletionDate = reader.IsDBNull(4) ? null : reader.GetDateTime(4),
+                Status = reader.IsDBNull(5) ? null : reader.GetString(5),
+                ProjectId = reader.GetInt32(6)
+            });
+        }
+
+        return tasks;
+    }
 
     // POST – indsæt task
     public async Task InsertAsync(TaskModel task)

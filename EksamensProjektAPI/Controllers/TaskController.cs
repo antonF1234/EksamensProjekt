@@ -35,6 +35,14 @@ public class TaskController : ControllerBase
         return Ok(model);
     }
 
+    [HttpGet("project/{pid}")]
+    public async Task<IActionResult> GetByProjectId(int pid)
+    {
+        var tasks = await _taskService.GetByProjectIdAsync(pid);
+        return Ok(tasks);
+    }
+
+
     [HttpGet("all")] // GET - hent alle projekter , fx til at vise projektlisten på forisden
     public async Task<IActionResult> GetAll()
     {
