@@ -17,4 +17,7 @@ public class ProjectService
     
     public async Task DeleteAsync(ProjectModel p)
         => await _repo.DeleteAsync(p);
+    
+    public async Task UpdateAsync(ProjectModel p)
+    => await _repo.UpdateAsync(p);
 }

@@ -99,4 +99,23 @@ public class ProjectRepo
         
         await cmd.ExecuteNonQueryAsync();
     }
+    
+    public async Task UpdateAsync(ProjectModel project)
+    {
+        await using var conn = new NpgsqlConnection(Conn);
+        await conn.OpenAsync();
+
+        // 1. opdater projekt
+        await using var cmd = new NpgsqlCommand(
+            "UPDATE projects (name, description, deadline, status) VALUES (@name, @desc, @deadline, @status) WHERE project_id = @pid",
+            conn);
+        
+        cmd.Parameters.AddWithValue("name", project.Name);
+        cmd.Parameters.AddWithValue("desc", (object?)project.Description ?? DBNull.Value);
+        cmd.Parameters.AddWithValue("deadline", (object?)project.Deadline ?? DBNull.Value);
+        cmd.Parameters.AddWithValue("status", (object?)project.Status);
+        cmd.Parameters.AddWithValue("pid", project.ProjectId);
+
+        await cmd.ExecuteNonQueryAsync();
+    }
 }

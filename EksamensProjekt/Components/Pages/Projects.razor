@@ -97,6 +97,7 @@ else
                         Vis tasks
                     </button>
                     <button class="btn-danger" @onclick="() => DeleteProject(p.ProjectId)">Slet</button>
+                    <button class="btn btn-primary" @onclick="() => UpdateProject(p)">Updater</button>
 
 
                 </div>
@@ -137,9 +138,45 @@ else
     </div>
 }
 
+@if (showProjectUpdateModal && selectedProject != null)
+{
+    <div class="modal-backdrop" @onclick="CloseUpdateTaskModal"></div>
+
+    <div class="modal-window">
+        <EditForm Model="selectedProject" OnValidSubmit="UpdateProject">
+            <div class="mb-3">
+                <label>Navn</label>
+                <InputText class="form-control" @bind-Value="selectedProject.Name" />
+            </div>
+
+            <div class="mb-3">
+                <label>Beskrivelse</label>
+                <InputText class="form-control" @bind-Value="selectedProject.Description" />
+            </div>
+
+            <div class="mb-3">
+                <label>Status</label>
+                <InputText class="form-control" @bind-Value="selectedProject.Status" />
+            </div>
+
+            <button class="btn btn-success me-2" type="submit">Gem</button>
+            <button class="btn btn-secondary" type="button" @onclick="CloserModal">Luk</button>
+        </EditForm>
+    </div>
+}
+
+        
+    
+        
+    
+    
+
+}
+
 
 @code {
     private bool showTaskModal = false;
+    private bool showProjectUpdateModal = false;
     private ProjectModel? selectedProject;
     private List<TaskModel> projectTasks = new();
     
@@ -161,6 +198,28 @@ else
         {
             await Http.DeleteAsync($"api/delete/{pid}"); //sletter med det samme
             await LoadProjects(); //genindlæs projektet
+        }
+    }
+
+    private void OpenUpdateProjectModal(ProjectModel p)
+    {
+        selectedProject = p;
+        showProjectUpdateModal = true;
+    }
+
+    private void CloseUpdateProjectModal()
+    {
+        selectedProject = null;
+        showProjectUpdateModal = false;
+    }
+
+    private async Task UpdateProject(ProjectModel selectedProject)
+    {
+        if (selectedProject != null)
+        {
+            await _Projects.UpdateAsync(selectedProject);
+            await LoadProjects();
+            CloseUpdateProjectModal();
         }
     }
 
