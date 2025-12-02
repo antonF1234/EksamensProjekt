@@ -88,6 +88,11 @@ else
                     <div class="card-footer text-muted small">
                         ID: @p.ProjectId
                     </div>
+                    
+                    <button class="btn btn-outline-primary btn-sm mt-2" @onclick="() => OpenTaskModal(p)">
+                        Vis tasks
+                    </button>
+
 
                 </div>
             </div>
@@ -95,7 +100,66 @@ else
     </div>
 }
 
+
+@if (showTaskModal && selectedProject != null)
+{
+    <div class="modal-backdrop" @onclick="CloseTaskModal"></div>
+
+    <div class="modal-window">
+        <h5>Tasks for @selectedProject.Name</h5>
+
+        @if (projectTasks.Count == 0)
+        {
+            <p>Ingen tasks for dette projekt endnu.</p>
+        }
+        else
+        {
+            <ul class="list-group">
+                @foreach (var t in projectTasks)
+                {
+                    <li class="list-group-item">
+                        <strong>@t.Name</strong> - @(t.Status ?? "Ny") 
+                        @if (t.Deadline.HasValue)
+                        {
+                            <span class="text-muted"> (Deadline: @t.Deadline.Value.ToString("dd-MM-yyyy"))</span>
+                        }
+                    </li>
+                }
+            </ul>
+        }
+
+        <button class="btn btn-secondary mt-3" @onclick="CloseTaskModal">Luk</button>
+    </div>
+}
+
+
 @code {
+    private bool showTaskModal = false;
+    private ProjectModel? selectedProject;
+    private List<TaskModel> projectTasks = new();
+    
+    
+    private async Task OpenTaskModal(ProjectModel project)
+    {
+        selectedProject = project;
+        showTaskModal = true;
+
+        // Fetch tasks from API by project ID
+        projectTasks = await Http.GetFromJsonAsync<List<TaskModel>>($"api/tasks/project/{project.ProjectId}") 
+                       ?? new List<TaskModel>();
+    }
+
+    private void CloseTaskModal()
+    {
+        selectedProject = null;
+        projectTasks.Clear();
+        showTaskModal = false;
+    }
+
+    
+    
+    
+    
     protected override async Task OnInitializedAsync()
     {
         await LoadProjects();
