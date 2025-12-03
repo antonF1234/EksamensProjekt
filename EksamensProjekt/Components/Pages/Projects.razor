@@ -97,7 +97,7 @@ else
                         Vis tasks
                     </button>
                     <button class="btn-danger" @onclick="() => DeleteProject(p.ProjectId)">Slet</button>
-                    <button class="btn btn-primary" @onclick="() => UpdateProject(p)">Updater</button>
+                    <button class="btn btn-primary" @onclick="() => OpenUpdateProjectModal(p)">Updater</button>
 
 
                 </div>
@@ -134,13 +134,14 @@ else
             </ul>
         }
 
-        <button class="btn btn-secondary mt-3" @onclick="CloseTaskModal">Luk</button>
+        <button class="btn btn-secondary" type="button" @onclick="CloseTaskModal">Luk</button>
+
     </div>
 }
 
 @if (showProjectUpdateModal && selectedProject != null)
 {
-    <div class="modal-backdrop" @onclick="CloseUpdateTaskModal"></div>
+    <div class="modal-backdrop" @onclick="CloseUpdateProjectModal"></div>
 
     <div class="modal-window">
         <EditForm Model="selectedProject" OnValidSubmit="UpdateProject">
@@ -160,16 +161,11 @@ else
             </div>
 
             <button class="btn btn-success me-2" type="submit">Gem</button>
-            <button class="btn btn-secondary" type="button" @onclick="CloserModal">Luk</button>
+            <button class="btn btn-secondary" type="button" @onclick="CloseUpdateProjectModal">Luk</button>
         </EditForm>
     </div>
 }
 
-        
-    
-        
-    
-    
 
 }
 
@@ -180,6 +176,16 @@ else
     private ProjectModel? selectedProject;
     private List<TaskModel> projectTasks = new();
     
+
+    private async Task DeleteProject(int pid) //tager projectid (Ln 99, bt class DeleteP) og kalder endpoint
+    {
+        bool confirmed = await JS.InvokeAsync<bool>("confirm", "Er du sikker på du vil slette dette projekt");
+        if (confirmed) //pop up vindue
+        {
+            await Http.DeleteAsync($"api/delete/{pid}"); //sletter med det samme
+            await LoadProjects(); //genindlæs projektet
+        }
+    }
     
     private async Task OpenTaskModal(ProjectModel project)
     {
@@ -189,16 +195,6 @@ else
         // Fetch tasks from API by project ID
         projectTasks = await Http.GetFromJsonAsync<List<TaskModel>>($"api/tasks/project/{project.ProjectId}") 
                        ?? new List<TaskModel>();
-    }
-
-    private async Task DeleteProject(int pid) //tager projectid (Ln 98, bt class DeleteP) og kalder endpoint
-    {
-        bool confirmed = await JS.InvokeAsync<bool>("confirm", "Er du sikker på du vil slette dette projekt");
-        if (confirmed) //pop up vindue
-        {
-            await Http.DeleteAsync($"api/delete/{pid}"); //sletter med det samme
-            await LoadProjects(); //genindlæs projektet
-        }
     }
 
     private void OpenUpdateProjectModal(ProjectModel p)
@@ -213,15 +209,17 @@ else
         showProjectUpdateModal = false;
     }
 
-    private async Task UpdateProject(ProjectModel selectedProject)
+    private async Task UpdateProject()
     {
         if (selectedProject != null)
         {
             await _Projects.UpdateAsync(selectedProject);
             await LoadProjects();
+            selectedProject = null;
             CloseUpdateProjectModal();
         }
     }
+
 
     private void CloseTaskModal()
     {

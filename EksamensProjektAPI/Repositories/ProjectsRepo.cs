@@ -107,7 +107,7 @@ public class ProjectRepo
 
         // 1. opdater projekt
         await using var cmd = new NpgsqlCommand(
-            "UPDATE projects (name, description, deadline, status) VALUES (@name, @desc, @deadline, @status) WHERE project_id = @pid",
+            "UPDATE projects SET name=@name, description=@desc, deadline=@deadline, status=@status WHERE project_id=@pid",
             conn);
         
         cmd.Parameters.AddWithValue("name", project.Name);
