@@ -49,7 +49,7 @@ public class ProjectController : ControllerBase
                                                             // 201 betyder " jeg har lige lavet noget nyt og her er det fx nyt projekt"
     }
 
-    /*[HttpPut("update/{id}")]
+    [HttpPut("update/{id}")]
     public async Task<IActionResult> Update(int id, ProjectModel model)
     {
         var project = await _projectService.GetByIdAsync(id);
@@ -62,7 +62,7 @@ public class ProjectController : ControllerBase
 
         await _projectService.UpdateAsync(project);
         return Ok();
-    }*/
+    }
 
     [HttpDelete("delete/{id}")]
     public async Task<IActionResult> Delete(int id)
