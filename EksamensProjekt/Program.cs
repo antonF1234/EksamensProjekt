@@ -13,6 +13,7 @@ builder.Services.AddScoped<ProjectService>();
 builder.Services.AddScoped<ProjectRepo>();
 builder.Services.AddBlazoredLocalStorage();
 builder.Services.AddHttpClient();
+builder.Services.AddScoped<EksamensProjektAPI.Repositories.SkillRepo>();
 
 builder.Services.AddScoped(sp => new HttpClient
 {

@@ -1,0 +1,89 @@
+@page "/Skills"
+@inject NavigationManager Nav
+@using EksamensProjekt.Models
+@using EksamensProjektAPI.Repositories
+@using EksamensProjektAPI.Services
+@inject Blazored.LocalStorage.ILocalStorageService LS
+@rendermode InteractiveServer
+@inject HttpClient Http
+@inject IJSRuntime JS
+
+@inject SkillRepo _Skill
+
+<h3>Skills</h3>
+
+<EditForm Model="newSkill" OnValidSubmit="CreateSkill">
+    <DataAnnotationsValidator />
+    <div class="mb-3">
+        <label class="form-label">Navn</label>
+        <InputText class="form-control" @bind-Value="newSkill.Name" />
+    </div>
+    <button class="btn btn-primary" type="submit">Opret Skill</button>
+
+
+</EditForm>
+
+@code {
+    public SkillModel newSkill = new();
+
+    private async Task CreateSkill()
+    {
+        await _Skill.InsertAsync(newSkill);
+        newSkill = new SkillModel();
+        await LoadSkills();
+    }
+}
+
+@if (skills == null)
+    
+{
+    <p>Henter projekter fra databasen...</p>                 @* Vises mens vi venter på svar *@
+}
+else if (skills.Count == 0)
+{
+    <div class="alert alert-info">Der er ingen skills endnu – opret det første ovenfor!</div>
+}
+else
+{
+    <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4">
+        @foreach (var s in skills)
+        {
+            <div class="col">
+                <div class="card h-100 shadow-sm">
+                    <div class="card-body">
+                        <h5 class="card-title">@s.Name</h5>
+                        <p class="text-muted small">ID: @s.SkillId</p>
+                    </div>
+                    <div class="card-footer">
+                       <!-- <button class="btn btn-danger btn-sm" 
+                                @onclick="() => DeleteSkill(s.SkillId)">
+                            Slet
+                        </button>-->
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+}
+
+@code {
+    
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadSkills();
+    }
+    
+    // Liste med alle projekter fra databasen
+    private List<SkillModel> skills = new();
+    
+    // Henter projekter fra API’et (bliver brugt flere gange)
+    private async Task LoadSkills()
+    {
+        skills = await Http.GetFromJsonAsync<List<SkillModel>>("api/skills/allskills");
+        if (skills == null)
+        {
+            skills = new List<SkillModel>();
+        }
+
+    }
+}
