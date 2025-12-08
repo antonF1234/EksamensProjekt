@@ -51,5 +51,31 @@ public class UserRepo
         return true; // if the query is executed successfully return true, this is not used for now....
     }
 
+    public async Task<List<UserModel>> GetAllUsersAsync()
+    {
+        var users = new List<UserModel>();
+
+        await using var conn = new NpgsqlConnection(Conn);
+        await conn.OpenAsync();
+
+        await using var cmd = new NpgsqlCommand(
+            "SELECT user_id, username, email, is_admin FROM users",
+            conn);
+
+        await using var reader = await cmd.ExecuteReaderAsync();
+
+        while (await reader.ReadAsync())
+        {
+            users.Add(new UserModel
+            {
+                UserId = reader.GetInt32(0),
+                Username = reader.GetString(1),
+                Email = reader.GetString(2),
+                IsAdmin = reader.GetBoolean(3)
+            });
+        }
+
+        return users;
+    }
 
 }

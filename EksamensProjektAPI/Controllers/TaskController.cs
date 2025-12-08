@@ -7,7 +7,7 @@ using EksamensProjektAPI.Services; //vores Projectservice
 namespace EksamensProjektAPI.Controllers;
 
 [ApiController] // gør det til en rigtig web-API controller
-[Route("api/tasks")] //alle endpoints starter med /api
+[Route("api/tasks")] //alle endpoints starter med /api/tasks
 public class TaskController : ControllerBase
 {
     private readonly TaskService _taskService; //Depency Injection - får ProjectService "insprøjtet" auto

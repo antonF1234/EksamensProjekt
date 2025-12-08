@@ -36,5 +36,11 @@ public class UserService
         return null; // else return null
     }
 
+    public async Task<List<UserModel>> GetAllAsync()
+    {
+        return await _repo.GetAllUsersAsync();
+    }
+
+
 
 }

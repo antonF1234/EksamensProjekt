@@ -12,7 +12,8 @@ builder.Services.AddScoped<ProjectRepo>();
 builder.Services.AddScoped<TaskRepo>();
 builder.Services.AddScoped<TaskService>();
 builder.Services.AddScoped<SkillService>();
-
+builder.Services.AddScoped<UserService>();
+builder.Services.AddScoped<UserRepo>();
 
 var app = builder.Build();
 
