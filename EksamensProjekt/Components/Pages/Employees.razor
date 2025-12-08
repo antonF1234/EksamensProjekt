@@ -48,10 +48,10 @@ else
         await LoadUsers();
     }
     
-    // Liste med alle projekter fra databasen
+    // Liste med alle brugere fra databasen
     private List<UserModel> users = new();
     
-    // Henter projekter fra API’et (bliver brugt flere gange)
+    // Henter brugere fra API’et (bliver brugt flere gange)
     private async Task LoadUsers()
     {
         users = await Http.GetFromJsonAsync<List<UserModel>>("api/users/allusers");
