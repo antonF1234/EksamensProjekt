@@ -10,4 +10,9 @@ public class UsersSkillsService
     {
         await _repo.InsertAsync(skillId, userId);
     }
+
+    public async Task DeleteUserSkillAsync(int userSkillId)
+    {
+        await _repo.DeleteAsync(userSkillId);
+    }
 }

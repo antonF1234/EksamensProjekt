@@ -24,4 +24,11 @@ public class UsersSkillsController : ControllerBase
         await _usersSkillsService.InsertUserSkillAsync(skillId, userId);
         return Ok();
     }
+    
+    [HttpDelete("deleteuserskill/{userSkillId}")]
+    public async Task<IActionResult> DeleteAsyncUserSkill(int userSkillId)
+    {
+        await _usersSkillsService.DeleteUserSkillAsync(userSkillId);
+        return Ok();
+    }
 }
