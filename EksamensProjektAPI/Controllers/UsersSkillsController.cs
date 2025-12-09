@@ -25,6 +25,13 @@ public class UsersSkillsController : ControllerBase
         return Ok();
     }
     
+    [HttpGet("getuserskills/{userId}")]
+    public async Task<IActionResult> GetAllAsyncUserSkills(int userId)
+    {
+        var skills = await _usersSkillsService.GetAllUserSkillsAsync(userId);
+        return Ok(skills);
+    }
+    
     [HttpDelete("deleteuserskill/{userSkillId}")]
     public async Task<IActionResult> DeleteAsyncUserSkill(int userSkillId)
     {

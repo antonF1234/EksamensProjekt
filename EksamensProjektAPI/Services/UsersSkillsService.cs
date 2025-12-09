@@ -1,4 +1,5 @@
-﻿using EksamensProjektAPI.Repositories;
+﻿using EksamensProjekt.Models;
+using EksamensProjektAPI.Repositories;
 
 namespace EksamensProjektAPI.Services;
 
@@ -10,7 +11,12 @@ public class UsersSkillsService
     {
         await _repo.InsertAsync(skillId, userId);
     }
-
+    
+    public async Task<List<UsersSkillsModel>> GetAllUserSkillsAsync(int userId)
+    {
+        return await _repo.GetAllUserSkillsAsync(userId);
+    }
+    
     public async Task DeleteUserSkillAsync(int userSkillId)
     {
         await _repo.DeleteAsync(userSkillId);

@@ -1,4 +1,5 @@
-﻿using Npgsql;
+﻿using EksamensProjekt.Models;
+using Npgsql;
 namespace EksamensProjektAPI.Repositories;
 
 public class UsersSkillsRepo
@@ -19,6 +20,42 @@ public class UsersSkillsRepo
         
         await cmd.ExecuteNonQueryAsync();
     }
+    
+    public async Task<List<UsersSkillsModel>> GetAllUserSkillsAsync(int userId)
+    {
+        await using var conn = new NpgsqlConnection(Conn);
+        await conn.OpenAsync();
+
+        await using var cmd = new NpgsqlCommand(
+            @"SELECT 
+              us.employee_skill_id,
+              us.employee_id,
+              us.skill_id,
+              s.name AS skill_name
+          FROM users_skills us
+          JOIN skills s ON us.skill_id = s.skill_id
+          WHERE us.employee_id = @employee_id", conn);
+
+        cmd.Parameters.AddWithValue("employee_id", userId);
+
+        await using var reader = await cmd.ExecuteReaderAsync();
+
+        var userSkills = new List<UsersSkillsModel>();
+
+        while (await reader.ReadAsync())
+        {
+            userSkills.Add(new UsersSkillsModel
+            {
+                UserSkillId = reader.GetInt32(0),
+                UserId      = reader.GetInt32(1),
+                SkillId     = reader.GetInt32(2),
+                SkillName   = reader.GetString(3)
+            });
+        }
+
+        return userSkills;
+    }
+
 
     public async Task DeleteAsync(int userSkillId)
     {
