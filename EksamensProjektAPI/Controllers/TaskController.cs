@@ -43,14 +43,14 @@ public class TaskController : ControllerBase
     }
 
 
-    [HttpGet("all")] // GET - hent alle projekter , fx til at vise projektlisten på forisden
+    [HttpGet("all")] 
     public async Task<IActionResult> GetAll()
     {
         var tasks = await _taskService.GetAllAsync(); //henter alle fra databasen
         return Ok(tasks);                           // statuskode 200 + sender listen tilbage
     }
 
-    [HttpGet("{id}")] // hent et specifikt projekt med id = 5
+    [HttpGet("{id}")]
     public async Task<IActionResult> GetbyId(int id)
     {
         var task = await _taskService.GetByIdAsync(id); // søger i databasen

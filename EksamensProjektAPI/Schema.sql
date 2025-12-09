@@ -77,3 +77,14 @@ CREATE TABLE tasks_skills (
 
 CREATE INDEX idx_tasks_skills_user ON tasks_skills(employee_id);
 CREATE INDEX idx_tasks_skills_skill ON tasks_skills(skill_id);
+
+-- USERS_TASKS (many-to-many)
+CREATE TABLE users_tasks (
+                             user_task_id SERIAL PRIMARY KEY,
+                             user_id      INT REFERENCES users(user_id),
+                             task_id      INT REFERENCES tasks(task_id),
+                             UNIQUE (user_id, task_id)
+);
+
+CREATE INDEX idx_users_tasks_user ON users_tasks(user_id);
+CREATE INDEX idx_users_tasks_task ON users_tasks(task_id);

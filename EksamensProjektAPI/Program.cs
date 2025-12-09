@@ -1,3 +1,4 @@
+using EksamensProjektAPI.Repositories;
 using EksamensProjektAPI.Services;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -15,6 +16,8 @@ builder.Services.AddScoped<SkillService>();
 builder.Services.AddScoped<UserService>();
 builder.Services.AddScoped<UserRepo>();
 builder.Services.AddScoped<UsersSkillsService>();
+builder.Services.AddScoped<UsersTasksService>();
+builder.Services.AddScoped<UsersTasksRepo>();
 
 var app = builder.Build();
 
