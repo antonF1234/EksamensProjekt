@@ -10,4 +10,6 @@ public class TaskModel
     public string? Status { get; set; }
 
     public int ProjectId { get; set; }   // FK
+    
+    public int? AssignedToUserId { get; set; }
 }
