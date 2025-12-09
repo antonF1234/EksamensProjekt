@@ -19,4 +19,26 @@ public class TaskService
     
     public async Task<TaskModel?> GetByIdAsync(int id)
         => await _repo.GetByIdAsync(id);
+
+    public async Task<UsersTasksModel?> UpdateAsync(int taskId, string status)
+    {
+        // Update the status directly via repo
+        await _repo.UpdateTaskAsync(taskId, status);
+
+        // Fetch the updated task to return as UsersTasksModel
+        var task = await _repo.GetByIdAsync(taskId);
+        if (task == null) return null;
+
+        return new UsersTasksModel
+        {
+            TaskId = task.TaskId,
+            TaskName = task.Name,
+            Status = task.Status,
+            StartDate = task.StartDate,
+            Deadline = task.Deadline,
+            CompletionDate = task.CompletionDate
+        };
+    }
+
+
 }

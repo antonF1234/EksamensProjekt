@@ -115,4 +115,19 @@ public class TaskRepo
         await cmd.ExecuteNonQueryAsync();
     }
     
+    public async Task UpdateTaskAsync(int taskId, string status)
+    {
+        await using var conn = new NpgsqlConnection(Conn);
+        await conn.OpenAsync();
+
+        // 1. opdater taskens status udfra id
+        await using var cmd = new NpgsqlCommand(
+            "UPDATE tasks SET status=@status WHERE task_id=@taskId",
+            conn);
+        
+        cmd.Parameters.AddWithValue("taskId", taskId);
+        cmd.Parameters.AddWithValue("status", status);
+
+        await cmd.ExecuteNonQueryAsync();
+    }
 }

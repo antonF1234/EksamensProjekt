@@ -59,4 +59,13 @@ public class TaskController : ControllerBase
                                                             // hvis det findes - 200 ok + projektet
                                                             // 201 betyder " jeg har lige lavet noget nyt og her er det fx nyt projekt"
     }
+    
+    [HttpPut("updatestatus/{id}/{status}")]
+    public async Task<IActionResult> UpdateStatus(int id, string status)
+    {
+        var updatedTask = await _taskService.UpdateAsync(id, status);
+        if (updatedTask == null) return NotFound();
+
+        return Ok(updatedTask);
+    }
 }
