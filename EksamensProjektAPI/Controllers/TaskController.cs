@@ -68,4 +68,28 @@ public class TaskController : ControllerBase
         await _taskService.DeleteAsync(id);
         return Ok();
     }
+    
+    [HttpPut("update/{id}")]
+    public async Task<IActionResult> Update(int id, TaskModel model)
+    {
+        var task = await _taskService.GetByIdAsync(id);
+        if (task == null) 
+        {
+            Console.WriteLine($"Task med id {id} findes ikke!");
+            return NotFound();
+        }
+
+
+        task.Name = model.Name;
+        task.StartDate = model.StartDate;
+        task.Deadline = model.Deadline;
+        task.CompletionDate = model.CompletionDate;
+        task.Status = model.Status;
+        task.ProjectId = model.ProjectId;
+        
+        
+
+        await _taskService.UpdateAsync(task);
+        return Ok();
+    }
 }

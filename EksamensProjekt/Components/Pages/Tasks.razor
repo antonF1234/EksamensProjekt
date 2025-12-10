@@ -1,14 +1,13 @@
 ﻿@page "/Tasks"
 @inject NavigationManager Nav
 @using EksamensProjekt.Models
-@using EksamensProjektAPI.Services
-@inject Blazored.LocalStorage.ILocalStorageService LS
-@rendermode InteractiveServer
 @inject HttpClient Http
 @inject IJSRuntime JS
+@rendermode InteractiveServer
+
 <h3>Opgaver</h3>
 
-
+<!-- Opret ny task -->
 <EditForm Model="newTask" OnValidSubmit="CreateNewTask">
     <DataAnnotationsValidator />
     <div class="mb-3">
@@ -36,99 +35,135 @@
                 <option value="@project.ProjectId">@project.Name</option>
             }
         </select>
-
     </div>
     <button class="btn btn-primary" type="submit">Opret opgave</button>
-
-
 </EditForm>
 
+<!-- Liste over tasks -->
 @foreach (var task in tasks)
 {
     <div class="card mb-3">
         <div class="card-body">
-            <TaskCard Task="@task" />
-
             <h5 class="card-title">@task.Name</h5>
-
             <ul class="list-unstyled mb-0">
                 <li><strong>Start:</strong> @task.StartDate</li>
                 <li><strong>Deadline:</strong> @task.Deadline</li>
                 <li><strong>Completed:</strong> @task.CompletionDate</li>
                 <li><strong>Status:</strong> @task.Status</li>
             </ul>
-            <select @onchange="e => OnUserSelected(task.TaskId, e)" class="form-select">
-                <option value="">Select user...</option>
-                @foreach (var u in users)
-                {
-                    <option value="@u.UserId">@u.Username</option>
-                }
-            </select>
 
-
+            <button class="btn btn-primary btn-sm mt-2" @onclick="() => OpenUpdateTaskModal(task)">Updater</button>
+            <button class="btn btn-danger btn-sm mt-2" @onclick="() => DeleteTask(task.TaskId)">Slet</button>
         </div>
     </div>
 }
 
+<!-- Modal til opdatering af task -->
+@if (showUpdateTaskModal && SelectedTask != null)
+{
+    <div class="modal-backdrop" @onclick="CloseUpdateTaskModal"></div>
+    <div class="modal-window p-3 bg-white rounded shadow">
+        <h5>Opdater Task: @SelectedTask.Name</h5>
+        <EditForm Model="SelectedTask" OnValidSubmit="UpdateTask">
+            <div class="mb-3">
+                <label class="form-label">Navn</label>
+                <InputText class="form-control" @bind-Value="SelectedTask.Name" />
+            </div>
+            <div class="mb-3">
+                <label class="form-label">Start dato</label>
+                <InputDate class="form-control" @bind-Value="SelectedTask.StartDate" />
+            </div>
+            <div class="mb-3">
+                <label class="form-label">Deadline</label>
+                <InputDate class="form-control" @bind-Value="SelectedTask.Deadline" />
+            </div>
+            <div class="mb-3">
+                <label class="form-label">Status</label>
+                <InputText class="form-control" @bind-Value="SelectedTask.Status" />
+            </div>
+            <button class="btn btn-success me-2" type="submit">Gem</button>
+            <button class="btn btn-secondary" type="button" @onclick="CloseUpdateTaskModal">Luk</button>
+        </EditForm>
+    </div>
+}
+
 @code {
-    private TaskModel newTask = new ();
+    private TaskModel newTask = new();
+    private TaskModel? SelectedTask;
+    private List<TaskModel> tasks = new();
     private List<ProjectModel> projects = new();
     private int selectedProjectId;
-    
-    private List<UserModel> users = new();
-    
+    private bool showUpdateTaskModal = false;
+
     protected override async Task OnInitializedAsync()
     {
         await LoadAllTasks();
-        projects = await Http.GetFromJsonAsync<List<ProjectModel>>("api/all");
-        users = await Http.GetFromJsonAsync<List<UserModel>>("api/users/allusers");
-    }
-    
-    private async Task OnUserSelected(int taskId, ChangeEventArgs e)
-    {
-        if (int.TryParse(e.Value?.ToString(), out var userId))
-        {
-            await AddUserToTask(taskId, userId);
-        }
+        projects = await Http.GetFromJsonAsync<List<ProjectModel>>("api/all") ?? new List<ProjectModel>();
     }
 
-    private async Task AddUserToTask(int taskId, int userId)
-    {
-        await Http.PostAsync(
-            $"api/userstasks/addusertask/{taskId}/{userId}",
-            new StringContent("")
-        );
-    }
-    
-    // Liste med alle tasks fra databasen
-    private List<TaskModel> tasks = new();
-    
-    // Henter tasks fra API’et
     private async Task LoadAllTasks()
     {
-        tasks = await Http.GetFromJsonAsync<List<TaskModel>>("api/tasks/all");
-        if (tasks == null)
-        {
-            tasks = new List<TaskModel>();
-        }
+        tasks = await Http.GetFromJsonAsync<List<TaskModel>>("api/tasks/all") ?? new List<TaskModel>();
     }
 
-    private async Task CreateTask(TaskModel NTask, int pid)
+    private async Task CreateNewTask()
     {
+        if (selectedProjectId == 0) return;
         await Http.PostAsJsonAsync($"api/tasks/createtask/{selectedProjectId}", newTask);
         await LoadAllTasks();
         newTask = new TaskModel();
     }
 
-
-    
-    private async Task CreateNewTask()
+    private async Task DeleteTask(int tid)
     {
-        if (selectedProjectId == 0)
+        bool confirmed = await JS.InvokeAsync<bool>("confirm", "Er du sikker på du vil slette denne task?");
+        if (confirmed)
         {
-            return;
+            await Http.DeleteAsync($"api/delete/{tid}");
+            await LoadAllTasks();
         }
-
-        await CreateTask(newTask, selectedProjectId);
     }
+
+    private void OpenUpdateTaskModal(TaskModel task)
+    {
+        Console.WriteLine($"Åbner modal for TaskId: {task.TaskId}");
+        SelectedTask = new TaskModel
+        {
+            TaskId = task.TaskId,
+            Name = task.Name,
+            StartDate = task.StartDate,
+            Deadline = task.Deadline,
+            CompletionDate = task.CompletionDate,
+            Status = task.Status,
+            ProjectId = task.ProjectId
+        };
+        showUpdateTaskModal = true;
+    }
+
+
+    private void CloseUpdateTaskModal()
+    {
+        SelectedTask = null;
+        showUpdateTaskModal = false;
+    }
+
+    private async Task UpdateTask()
+    {
+        if (SelectedTask != null)
+        {
+            var response = await Http.PutAsJsonAsync($"api/tasks/update/{SelectedTask.TaskId}", SelectedTask);
+
+            if (response.IsSuccessStatusCode)
+            {
+                await LoadAllTasks();
+                CloseUpdateTaskModal();
+            }
+            else
+            {
+                Console.WriteLine("Fejl ved opdatering af task: " + response.StatusCode);
+            }
+        }
+    }
+    
+    
 }

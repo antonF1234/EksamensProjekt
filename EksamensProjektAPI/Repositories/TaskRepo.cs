@@ -144,4 +144,24 @@ public class TaskRepo
         
         await cmd.ExecuteNonQueryAsync();
     }
+    
+    public async Task UpdateAsync(TaskModel task)
+    {
+        await using var conn = new NpgsqlConnection(Conn);
+        await conn.OpenAsync();
+
+        // 1. opdater tasks
+        await using var cmd = new NpgsqlCommand(
+            "UPDATE tasks SET name=@name, start_date=@startdate, deadline=@deadline, completion_date=@completiondate, status=@status, project_id=@projectid WHERE task_id=@tid",
+            conn);
+        
+        cmd.Parameters.AddWithValue("name", task.Name);
+        cmd.Parameters.AddWithValue("start_date", (object?)task.StartDate ?? DBNull.Value);
+        cmd.Parameters.AddWithValue("deadline", (object?)task.Deadline ?? DBNull.Value);
+        cmd.Parameters.AddWithValue("status", (object?)task.Status);
+        cmd.Parameters.AddWithValue("pid", task.ProjectId);
+        cmd.Parameters.AddWithValue("tid", task.TaskId);
+
+        await cmd.ExecuteNonQueryAsync();
+    }
 }

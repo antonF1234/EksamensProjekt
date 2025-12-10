@@ -44,6 +44,7 @@ public class TaskService
     {
         await _repo.DeleteTaskAsync(taskId);
     }
-
+    public async Task UpdateAsync(TaskModel t)
+        => await _repo.UpdateAsync(t);
 
 }
