@@ -1,0 +1,135 @@
+﻿@page "/Tasks"
+@inject NavigationManager Nav
+@using EksamensProjekt.Models
+@using EksamensProjektAPI.Services
+@inject Blazored.LocalStorage.ILocalStorageService LS
+@rendermode InteractiveServer
+@inject HttpClient Http
+@inject IJSRuntime JS
+<h3>Opgaver</h3>
+
+
+<EditForm Model="newTask" OnValidSubmit="CreateNewTask">
+    <DataAnnotationsValidator />
+    <div class="mb-3">
+        <label class="form-label">Navn</label>
+        <InputText class="form-control" @bind-Value="newTask.Name" />
+    </div>
+    <div class="mb-3">
+        <label class="form-label">Start dato</label>
+        <InputDate class="form-control" @bind-Value="newTask.StartDate" />
+    </div>
+    <div class="mb-3">
+        <label class="form-label">Deadline</label>
+        <InputDate class="form-control" @bind-Value="newTask.Deadline" />
+    </div>
+    <div class="mb-3">
+        <label class="form-label">Status</label>
+        <InputText class="form-control" @bind-Value="newTask.Status" />
+    </div>
+    <div class="mb-3">
+        <label class="form-label">Projekt</label>
+        <select class="form-select" @bind="selectedProjectId">
+            <option value="">Vælg projekt...</option>
+            @foreach (var project in projects)
+            {
+                <option value="@project.ProjectId">@project.Name</option>
+            }
+        </select>
+
+    </div>
+    <button class="btn btn-primary" type="submit">Opret opgave</button>
+
+
+</EditForm>
+
+@foreach (var task in tasks)
+{
+    <div class="card mb-3">
+        <div class="card-body">
+            <TaskCard Task="@task" />
+
+            <h5 class="card-title">@task.Name</h5>
+
+            <ul class="list-unstyled mb-0">
+                <li><strong>Start:</strong> @task.StartDate</li>
+                <li><strong>Deadline:</strong> @task.Deadline</li>
+                <li><strong>Completed:</strong> @task.CompletionDate</li>
+                <li><strong>Status:</strong> @task.Status</li>
+            </ul>
+            <select @onchange="e => OnUserSelected(task.TaskId, e)" class="form-select">
+                <option value="">Select user...</option>
+                @foreach (var u in users)
+                {
+                    <option value="@u.UserId">@u.Username</option>
+                }
+            </select>
+
+
+        </div>
+    </div>
+}
+
+@code {
+    private TaskModel newTask = new ();
+    private List<ProjectModel> projects = new();
+    private int selectedProjectId;
+    
+    private List<UserModel> users = new();
+    
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadAllTasks();
+        projects = await Http.GetFromJsonAsync<List<ProjectModel>>("api/all");
+        users = await Http.GetFromJsonAsync<List<UserModel>>("api/users/allusers");
+    }
+    
+    private async Task OnUserSelected(int taskId, ChangeEventArgs e)
+    {
+        if (int.TryParse(e.Value?.ToString(), out var userId))
+        {
+            await AddUserToTask(taskId, userId);
+        }
+    }
+
+    private async Task AddUserToTask(int taskId, int userId)
+    {
+        await Http.PostAsync(
+            $"api/userstasks/addusertask/{taskId}/{userId}",
+            new StringContent("")
+        );
+    }
+    
+    // Liste med alle tasks fra databasen
+    private List<TaskModel> tasks = new();
+    
+    // Henter tasks fra API’et
+    private async Task LoadAllTasks()
+    {
+        tasks = await Http.GetFromJsonAsync<List<TaskModel>>("api/tasks/all");
+        if (tasks == null)
+        {
+            tasks = new List<TaskModel>();
+        }
+    }
+
+    private async Task CreateTask(TaskModel NTask, int pid)
+    {
+        await Http.PostAsJsonAsync(
+            $"api/tasks/createtask/{pid}", // matcher nu controller
+            NTask
+        );
+    }
+
+
+    
+    private async Task CreateNewTask()
+    {
+        if (selectedProjectId == 0)
+        {
+            return;
+        }
+
+        await CreateTask(newTask, selectedProjectId);
+    }
+}

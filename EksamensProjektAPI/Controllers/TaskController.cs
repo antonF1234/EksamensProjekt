@@ -17,23 +17,15 @@ public class TaskController : ControllerBase
         _taskService = taskservice; //gemmer servicen, så den kan bruges i metoden
     }
 
-    [HttpPost ("tasks")] //Opret nyt projekt , Blazor kalder denne når bruger trykker "Opret projekt"
-    public async Task<IActionResult> Create(TaskModel model)
+    [HttpPost("createtask/{projectId}")]
+    public async Task<IActionResult> Create(int projectId, [FromBody] TaskModel model)
     {
-        int pid = 1; // vi var nød til at kalde det et eller andet
-        var project = new TaskModel
-        {
-            Name = model.Name,
-            StartDate = model.StartDate,
-            Deadline = model.Deadline,
-            CompletionDate = model.CompletionDate,
-            Status = model.Status,
-            ProjectId = model.ProjectId,
-        };
-        
-        await _taskService.CreateAsync(model, pid); // sender projektet til servicen;
+        if (model == null) return BadRequest("Task is null");
+        await _taskService.CreateAsync(model, projectId);
         return Ok(model);
     }
+
+
 
     [HttpGet("project/{pid}")]
     public async Task<IActionResult> GetByProjectId(int pid)
@@ -41,8 +33,7 @@ public class TaskController : ControllerBase
         var tasks = await _taskService.GetByProjectIdAsync(pid);
         return Ok(tasks);
     }
-
-
+    
     [HttpGet("all")] 
     public async Task<IActionResult> GetAll()
     {
