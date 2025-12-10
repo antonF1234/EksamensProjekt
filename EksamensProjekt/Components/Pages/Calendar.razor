@@ -1,143 +1,48 @@
 @page "/Calendar"
-@inject HttpClient Http
-@inject Blazored.LocalStorage.ILocalStorageService LS
-@rendermode InteractiveServer
 @using EksamensProjekt.Models
+@inject HttpClient Http
 
-<h2 class="mb-4">Mit tids-overblik</h2>
+<h3>Opgaver i kalenderen</h3>
 
-@if (events == null)
-{
-    <p>Henter dine opgaver og projekter...</p>   <!-- Viser mens vi venter på data -->
-}
-else if (events.Count == 0)
-{
-    <div class="alert alert-info">Du har ingen kommende deadlines endnu.</div>
-}
-else
-{
-    <div class="table-responsive">
-        <table class="table table-bordered" style="table-layout: fixed;">
-            <thead class="table-light">
-                <tr>
-                    <th>Mandag</th>
-                    <th>Tirsdag</th>
-                    <th>Onsdag</th>
-                    <th>Torsdag</th>
-                    <th>Fredag</th>
-                    <th>Lørdag</th>
-                    <th>Søndag</th>
-                </tr>
-            </thead>
-            <tbody>
-                <tr>
-                    <!-- Går igennem alle 7 dage i ugen -->
-                    @foreach (var day in GetWeekDays())
-                    {
-                        <td style="height: 140px; vertical-align: top;">
-                            <!-- Finder alle events, der hører til den her dag -->
-                            @foreach (var ev in events.Where(e => e.Date.Date == day.Date))
-                            {
-                                <!-- Boks med farve: rød hvis forsinket, ellers grøn -->
-                                <div class="p-2 mb-2 rounded text-white small @(ev.IsOverdue ? "bg-danger" : "bg-success")">
-                                    <strong>@ev.Title</strong><br />
-                                    <small>@ev.Type</small><br />
-                                    <small class="fw-bold">@ev.AssignedTo</small><br />
-                                    <small>Deadline: @ev.Date.ToString("dd/MM")</small>
-                                </div>
-                            }
-                        </td>
-                    }
-                </tr>
-            </tbody>
-        </table>
+<div class="calendar">
+    <div class="calendar-header">
+        @foreach (var day in Enum.GetValues(typeof(DayOfWeek)))
+        {
+            <div class="calendar-day-header">@day.ToString().Substring(0,3)</div>
+        }
     </div>
-}
+
+    <div class="calendar-body">
+        @for (int i = 0; i < (int)firstDayOfMonth.DayOfWeek; i++)
+        {
+            <div class="calendar-cell empty"></div>
+        }
+
+
+        @for (int day = 1; day <= DateTime.DaysInMonth(currentYear, currentMonth); day++)
+        {
+            var date = new DateTime(currentYear, currentMonth, day);
+            var dayTasks = tasks.Where(t => t.StartDate.HasValue && t.StartDate.Value.Date <= date && t.Deadline.HasValue && t.Deadline.Value.Date >= date).ToList();
+
+            <div class="calendar-cell">
+                <div class="date-number">@day</div>
+                @foreach(var task in dayTasks)
+                {
+                    <div class="task">@task.Name</div>
+                }
+            </div>
+        }
+    </div>
+</div>
 
 @code {
-    private List<CalendarModel> events = new();   // Her gemmer vi alt, der skal vises i kalenderen
-    private DateTime weekStart;                   // Holder styr på hvilken dag vi viser
+    private List<TaskModel> tasks = new List<TaskModel>();
+    private int currentYear = DateTime.Now.Year;
+    private int currentMonth = DateTime.Now.Month;
+    private DateTime firstDayOfMonth => new DateTime(currentYear, currentMonth, 1);
 
-    // Kører én gang når siden er helt færdig med at loade i browseren
-    protected override async Task OnAfterRenderAsync(bool firstRender)
+    protected override async Task OnInitializedAsync()
     {
-        if (firstRender)
-        {
-            // Starter kalenderen på i dag – så brugeren ser hvad der sker nu og fremad
-            var today = DateTime.Today;
-            int diff = (int)today.DayOfWeek - (int)DayOfWeek.Monday;
-            if (diff < 0) diff += 7;                   // Hvis det er søndag, så skal vi +6 dage
-            weekStart = today.AddDays(-diff);
-
-            await LoadEvents();   // Starter hentning af data
-        }
-    }
-
-    // Laver en liste med mandag, tirsdag...osv 
-    private List<DateTime> GetWeekDays() =>
-        Enumerable.Range(0, 7).Select(i => weekStart.AddDays(i)).ToList();
-
-    private async Task LoadEvents()
-    {
-        // TEST-DATA – så vi altid kan se noget i kalenderen (kan slettes igen)
-        events.Add(new CalendarModel
-        {
-            Title       = "Afleveringseksamen",
-            Date        = DateTime.Today.AddDays(5),
-            Type        = "Projekt",
-            AssignedTo  = "Hele gruppen",
-            IsOverdue   = false
-        });
-
-        try
-        {
-            // Henter hvilken bruger der er logget ind
-            int currentUserId = await LS.GetItemAsync<int>("userid");
-
-            // Henter alle projekter fra API’et
-            var allProjects = await Http.GetFromJsonAsync<List<ProjectModel>>("api/all");
-            if (allProjects == null) allProjects = new List<ProjectModel>();
-
-            // Henter alle opgaver
-            var allTasks = await Http.GetFromJsonAsync<List<TaskModel>>("api/tasks/all");
-            if (allTasks == null) allTasks = new List<TaskModel>();
-
-            // Tilføjer projekter til kalenderen
-            foreach (var p in allProjects.Where(p => p.Deadline.HasValue))
-            {
-                events.Add(new CalendarModel
-                {
-                    Title       = p.Name,
-                    Date        = p.Deadline.Value,
-                    Type        = "Projekt",
-                    AssignedTo  = "Hele gruppen",
-                    IsOverdue   = p.Deadline.Value < DateTime.Today
-                });
-            }
-
-            // Tilføjer opgaver og finder hvem de er tildelt
-            foreach (var t in allTasks.Where(t => t.Deadline.HasValue && t.AssignedToUserId.HasValue))
-            {
-                string assignedName = "Ukendt";
-                var user = await Http.GetFromJsonAsync<UserModel>($"api/users/{t.AssignedToUserId.Value}");
-                if (user != null && !string.IsNullOrEmpty(user.Username))
-                    assignedName = user.Username;
-
-                events.Add(new CalendarModel
-                {
-                    Title       = t.Name,
-                    Date        = t.Deadline.Value,
-                    Type        = "Opgave",
-                    AssignedTo  = assignedName,
-                    IsOverdue   = t.Deadline.Value < DateTime.Today
-                });
-            }
-        }
-        catch
-        {
-            // Hvis API’et crasher – viser vi stadig test-dataen
-        }
-
-        StateHasChanged();   
+        tasks = await Http.GetFromJsonAsync<List<TaskModel>>("/api/tasks/all");
     }
 }
