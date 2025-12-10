@@ -40,5 +40,10 @@ public class TaskService
         };
     }
 
+    public async Task DeleteAsync(int taskId)
+    {
+        await _repo.DeleteTaskAsync(taskId);
+    }
+
 
 }

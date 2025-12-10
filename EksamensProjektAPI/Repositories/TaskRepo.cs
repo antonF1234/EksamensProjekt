@@ -130,4 +130,18 @@ public class TaskRepo
 
         await cmd.ExecuteNonQueryAsync();
     }
+
+    public async Task DeleteTaskAsync(int taskId)
+    {
+        await using var conn = new NpgsqlConnection(Conn);
+        await conn.OpenAsync();
+        
+        await using var cmd = new NpgsqlCommand(
+            "DELETE FROM tasks WHERE task_id=@taskId",
+            conn);
+        
+        cmd.Parameters.AddWithValue("taskId", taskId);
+        
+        await cmd.ExecuteNonQueryAsync();
+    }
 }
