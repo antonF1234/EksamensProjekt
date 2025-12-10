@@ -119,10 +119,19 @@
         bool confirmed = await JS.InvokeAsync<bool>("confirm", "Er du sikker på du vil slette denne task?");
         if (confirmed)
         {
-            await Http.DeleteAsync($"api/delete/{tid}");
-            await LoadAllTasks();
+            Console.WriteLine("Sletter task med ID: " + tid);
+            var response = await Http.DeleteAsync($"api/tasks/delete/{tid}");
+            if (response.IsSuccessStatusCode)
+            {
+                await LoadAllTasks();
+            }
+            else
+            {
+                Console.WriteLine("Fejl ved sletning af task: " + response.StatusCode);
+            }
         }
     }
+
 
     private void OpenUpdateTaskModal(TaskModel task)
     {
