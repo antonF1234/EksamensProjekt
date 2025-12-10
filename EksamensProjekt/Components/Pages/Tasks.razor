@@ -115,10 +115,9 @@
 
     private async Task CreateTask(TaskModel NTask, int pid)
     {
-        await Http.PostAsJsonAsync(
-            $"api/tasks/createtask/{pid}", // matcher nu controller
-            NTask
-        );
+        await Http.PostAsJsonAsync($"api/tasks/createtask/{selectedProjectId}", newTask);
+        await LoadAllTasks();
+        newTask = new TaskModel();
     }
 
 

@@ -22,7 +22,12 @@
         @for (int day = 1; day <= DateTime.DaysInMonth(currentYear, currentMonth); day++)
         {
             var date = new DateTime(currentYear, currentMonth, day);
-            var dayTasks = tasks.Where(t => t.StartDate.HasValue && t.StartDate.Value.Date <= date && t.Deadline.HasValue && t.Deadline.Value.Date >= date).ToList();
+            var dayTasks = tasks.Where(t =>
+                    t.StartDate.HasValue &&
+                    t.StartDate.Value.Date <= date &&
+                    t.Deadline.HasValue &&
+                    t.Deadline.Value.Date >= date)
+                .ToList();
 
             <div class="calendar-cell">
                 <div class="date-number">@day</div>
