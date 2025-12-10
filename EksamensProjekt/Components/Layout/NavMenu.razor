@@ -1,6 +1,7 @@
 ﻿@inject Blazored.LocalStorage.ILocalStorageService LS
 @inject NavigationManager Nav
 @rendermode InteractiveServer
+
 <div class="top-row ps-3 navbar navbar-dark">
     <div class="container-fluid">
         <a class="navbar-brand" href="">EksamensProjekt</a>
@@ -10,7 +11,6 @@
 <input type="checkbox" title="Navigation menu" class="navbar-toggler"/>
 
 <div class="nav-scrollable" onclick="document.querySelector('.navbar-toggler').click()">
-    
     <nav class="nav flex-column">
         <div class="nav-item px-3">
             <NavLink class="nav-link" href="" Match="NavLinkMatch.All">
@@ -23,7 +23,43 @@
                 <span class="bi bi-plus-square-fill-nav-menu" aria-hidden="true"></span> Opret bruger
             </NavLink>
         </div>
-        
+
+        <div class="nav-item px-3">
+            <NavLink class="nav-link" href="projects">
+                <span class="bi bi-folder-fill-nav-menu" aria-hidden="true"></span> Projects
+            </NavLink>
+        </div>
+
+        <div class="nav-item px-3">
+            <NavLink class="nav-link" href="calendar">
+                <span class="bi bi-calendar-event-fill-nav-menu" aria-hidden="true"></span> Calendar
+            </NavLink>
+        </div>
+
+        <div class="nav-item px-3">
+            <NavLink class="nav-link" href="mytasks">
+                <span class="bi bi-list-task-nav-menu" aria-hidden="true"></span> My Tasks
+            </NavLink>
+        </div>
+
+        <div class="nav-item px-3">
+            <NavLink class="nav-link" href="tasks">
+                <span class="bi bi-check-square-fill-nav-menu" aria-hidden="true"></span> Tasks
+            </NavLink>
+        </div>
+
+        <div class="nav-item px-3">
+            <NavLink class="nav-link" href="skills">
+                <span class="bi bi-lightning-fill-nav-menu" aria-hidden="true"></span> Skills
+            </NavLink>
+        </div>
+
+        <div class="nav-item px-3">
+            <NavLink class="nav-link" href="employees">
+                <span class="bi bi-people-fill-nav-menu" aria-hidden="true"></span> Employees
+            </NavLink>
+        </div>
+
         <div class="nav-item px-3">
             <button class="btn btn-outline-dark text-bg-danger" @onclick="Logout">
                 <span class="bi bi-box-arrow-right me-1"></span> Logout
@@ -35,14 +71,13 @@
                 <span class="bi text-info" aria-hidden="true"></span> Login
             </NavLink>
         </div>
-        
-        @code
-        {
+
+        @code {
             private async Task Logout()
             {
                 await LS.ClearAsync();
                 Nav.NavigateTo(Nav.Uri, forceLoad: true);
             }
         }
-</nav>
+    </nav>
 </div>
