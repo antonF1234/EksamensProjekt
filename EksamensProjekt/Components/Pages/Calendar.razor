@@ -1,0 +1,48 @@
+@page "/Calendar"
+@using EksamensProjekt.Models
+@inject HttpClient Http
+
+<h3>Opgaver i kalenderen</h3>
+
+<div class="calendar">
+    <div class="calendar-header">
+        @foreach (var day in Enum.GetValues(typeof(DayOfWeek)))
+        {
+            <div class="calendar-day-header">@day.ToString().Substring(0,3)</div>
+        }
+    </div>
+
+    <div class="calendar-body">
+        @for (int i = 0; i < (int)firstDayOfMonth.DayOfWeek; i++)
+        {
+            <div class="calendar-cell empty"></div>
+        }
+
+
+        @for (int day = 1; day <= DateTime.DaysInMonth(currentYear, currentMonth); day++)
+        {
+            var date = new DateTime(currentYear, currentMonth, day);
+            var dayTasks = tasks.Where(t => t.StartDate.HasValue && t.StartDate.Value.Date <= date && t.Deadline.HasValue && t.Deadline.Value.Date >= date).ToList();
+
+            <div class="calendar-cell">
+                <div class="date-number">@day</div>
+                @foreach(var task in dayTasks)
+                {
+                    <div class="task">@task.Name</div>
+                }
+            </div>
+        }
+    </div>
+</div>
+
+@code {
+    private List<TaskModel> tasks = new List<TaskModel>();
+    private int currentYear = DateTime.Now.Year;
+    private int currentMonth = DateTime.Now.Month;
+    private DateTime firstDayOfMonth => new DateTime(currentYear, currentMonth, 1);
+
+    protected override async Task OnInitializedAsync()
+    {
+        tasks = await Http.GetFromJsonAsync<List<TaskModel>>("/api/tasks/all");
+    }
+}
