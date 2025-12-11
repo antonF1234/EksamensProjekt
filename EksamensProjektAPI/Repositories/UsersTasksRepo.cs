@@ -31,7 +31,8 @@ public class UsersTasksRepo
             ut.user_task_id, 
             ut.user_id, 
             ut.task_id, 
-            t.name AS task_name, 
+            t.name AS task_name,
+            t.project_id,
             u.username AS user_name,
             t.start_date,
             t.deadline,
@@ -56,11 +57,12 @@ public class UsersTasksRepo
                 UserId = reader.GetInt32(1),
                 TaskId = reader.GetInt32(2),
                 TaskName = reader.GetString(3),
-                UserName = reader.GetString(4),
-                StartDate = reader.IsDBNull(5) ? null : reader.GetDateTime(5),
-                Deadline = reader.IsDBNull(6) ? null : reader.GetDateTime(6),
-                CompletionDate = reader.IsDBNull(7) ? null : reader.GetDateTime(7),
-                Status = reader.IsDBNull(8) ? "" : reader.GetString(8)
+                ProjectId = reader.GetInt32(4),
+                UserName = reader.GetString(5),
+                StartDate = reader.IsDBNull(6) ? null : reader.GetDateTime(6),
+                Deadline = reader.IsDBNull(7) ? null : reader.GetDateTime(7),
+                CompletionDate = reader.IsDBNull(8) ? null : reader.GetDateTime(8),
+                Status = reader.IsDBNull(9) ? "" : reader.GetString(9)
             });
         }
 
