@@ -1,0 +1,66 @@
+@page "/timerecords/"
+@using EksamensProjekt.Models
+@inject HttpClient Http
+@inject Blazored.LocalStorage.ILocalStorageService LS
+@rendermode InteractiveServer
+
+<h3>Mine tidsregistreringer</h3>
+
+@if (!loaded)
+{
+    <p>Indlæser...</p>
+}
+else if (records == null || !records.Any())
+{
+    <p>Ingen tidsregistreringer fundet.</p>
+}
+else
+{
+    <table class="table table-striped">
+        <thead>
+        <tr>
+            <th>Task</th>
+            <th>Bruger</th>
+            <th>Start</th>
+            <th>Slut</th>
+            <th>Forbrugt tid</th>
+        </tr>
+        </thead>
+        <tbody>
+        @foreach (var rec in records)
+        {
+            <tr>
+                <td>@rec.TaskName</td>
+                <td>@rec.UserName</td>
+                <td>@rec.StartTime?.ToString("dd-MM-yyyy HH:mm")</td>
+                <td>@rec.EndTime?.ToString("dd-MM-yyyy HH:mm")</td>
+                <td>@Calculate(rec.StartTime, rec.EndTime)</td>
+            </tr>
+        }
+        </tbody>
+    </table>
+}
+
+@code {
+    private List<TimeRecordingModel>? records;
+    private int userId;
+    private bool loaded = false;
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            userId = await LS.GetItemAsync<int>("userid");
+            records = await Http.GetFromJsonAsync<List<TimeRecordingModel>>($"api/timerecords/user/{userId}");
+            loaded = true;
+            StateHasChanged();
+        }
+    }
+
+    private string Calculate(DateTime? start, DateTime? end)
+    {
+        if (start == null || end == null) return "-";
+        var diff = end.Value - start.Value;
+        return $"{(int)diff.TotalHours} t {diff.Minutes} min";
+    }
+}

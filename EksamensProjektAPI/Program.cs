@@ -18,6 +18,8 @@ builder.Services.AddScoped<UserRepo>();
 builder.Services.AddScoped<UsersSkillsService>();
 builder.Services.AddScoped<UsersTasksService>();
 builder.Services.AddScoped<UsersTasksRepo>();
+builder.Services.AddScoped<TimeRecordingsRepo>();
+builder.Services.AddScoped<TimeRecordingsService>();
 
 var app = builder.Build();
 
