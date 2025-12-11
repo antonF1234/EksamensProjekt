@@ -18,6 +18,8 @@ builder.Services.AddScoped<UserRepo>();
 builder.Services.AddScoped<UsersSkillsService>();
 builder.Services.AddScoped<UsersTasksService>();
 builder.Services.AddScoped<UsersTasksRepo>();
+builder.Services.AddScoped<TasksSkillsService>();
+builder.Services.AddScoped<TasksSkillsRepo>();
 
 var app = builder.Build();
 

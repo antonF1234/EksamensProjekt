@@ -6,7 +6,7 @@ DROP TABLE IF EXISTS tasks CASCADE;
 DROP TABLE IF EXISTS skills CASCADE;
 DROP TABLE IF EXISTS projects CASCADE;
 DROP TABLE IF EXISTS users CASCADE;
-
+DROP TABLE IF EXISTS time_recording CASCADE;
 
 -- USERS
 CREATE TABLE users (
@@ -68,14 +68,14 @@ CREATE INDEX idx_users_skills_user ON users_skills(employee_id);
 CREATE INDEX idx_users_skills_skill ON users_skills(skill_id);
 
 
--- TASKS_SKILLS (many-to-many)
 CREATE TABLE tasks_skills (
-                              employee_skill_id SERIAL PRIMARY KEY,
-                              employee_id       INT REFERENCES users(user_id) ON DELETE CASCADE,
-                              skill_id          INT REFERENCES skills(skill_id) ON DELETE CASCADE
+                              task_skill_id SERIAL PRIMARY KEY,
+                              task_id       INT REFERENCES tasks(task_id) ON DELETE CASCADE,
+                              skill_id      INT REFERENCES skills(skill_id) ON DELETE CASCADE,
+                              UNIQUE(task_id, skill_id)
 );
 
-CREATE INDEX idx_tasks_skills_user ON tasks_skills(employee_id);
+CREATE INDEX idx_tasks_skills_task ON tasks_skills(task_id);
 CREATE INDEX idx_tasks_skills_skill ON tasks_skills(skill_id);
 
 -- USERS_TASKS (many-to-many)
@@ -88,3 +88,16 @@ CREATE TABLE users_tasks (
 
 CREATE INDEX idx_users_tasks_user ON users_tasks(user_id);
 CREATE INDEX idx_users_tasks_task ON users_tasks(task_id);
+
+-- TIME RECORDING
+CREATE TABLE time_recording (
+                                time_record_id    SERIAL PRIMARY KEY,
+                                user_id           INT NOT NULL REFERENCES users(user_id) ON DELETE CASCADE,
+                                task_id           INT NOT NULL REFERENCES tasks(task_id) ON DELETE CASCADE,
+                                start_time        TIMESTAMP,
+                                end_time          TIMESTAMP,
+                                sum_of_time_second INT
+);
+
+CREATE INDEX idx_time_recording_user ON time_recording(user_id);
+CREATE INDEX idx_time_recording_task ON time_recording(task_id);
