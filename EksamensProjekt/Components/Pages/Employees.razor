@@ -7,10 +7,39 @@
 @inject HttpClient Http
 @inject IJSRuntime JS
 
+<h3>Tilføj skill til bruger</h3>
+
+<div class="row mb-4">
+    <div class="col-md-4">
+        <select class="form-select" @bind="selectedUserId">
+            <option value="">Vælg bruger...</option>
+            @foreach (var u in users)
+            {
+                <option value="@u.UserId">@u.Username</option>
+            }
+        </select>
+    </div>
+    <div class="col-md-4">
+        <select class="form-select" @bind="selectedSkillId">
+            <option value="">Vælg skill...</option>
+            @foreach (var skill in skills)
+            {
+                <option value="@skill.SkillId">@skill.Name</option>
+            }
+        </select>
+    </div>
+    <div class="col-md-4">
+        <button class="btn btn-primary" @onclick="AddSelectedSkill" disabled="@(!CanAdd)">
+            Tilføj
+        </button>
+    </div>
+</div>
+
+<hr />
+
 @if (users == null)
-    
 {
-    <p>Henter brugere fra databasen...</p>                 @* Vises mens vi venter på svar *@
+    <p>Henter brugere fra databasen...</p>
 }
 else if (users.Count == 0)
 {
@@ -24,41 +53,71 @@ else
             <div class="col">
                 <div class="card h-100 shadow-sm">
                     <div class="card-body">
-                        <h5 class="card-title">Brugernavn: @u.Username</h5>
-                        <h5 class="card-title">Email: @u.Email</h5>
-                        <h5 class="card-title">Er admin: @u.IsAdmin</h5>
+                        <h5 class="card-title">@u.Username</h5>
                         <p class="text-muted small">ID: @u.UserId</p>
-                    </div>
-                    <div class="card-footer">
-                        <!-- <button class="btn btn-danger btn-sm" 
-                                @onclick="() => DeleteSkill(s.SkillId)">
-                            Slet
-                        </button>-->
+
+                        @if (userSkillsMap.ContainsKey(u.UserId))
+                        {
+                            <div class="mt-2">
+                                @foreach (var skill in userSkillsMap[u.UserId])
+                                {
+                                    <span class="badge bg-primary me-1">@skill.SkillName</span>
+                                }
+                            </div>
+                        }
                     </div>
                 </div>
             </div>
         }
+
     </div>
 }
 
 @code {
-    
+    private List<UserModel> users = new();
+    private List<SkillModel> skills = new();
+
+    private int? selectedUserId;
+    private int? selectedSkillId;
+
+    private bool CanAdd => selectedUserId.HasValue && selectedSkillId.HasValue;
+
+    private Dictionary<int, List<UsersSkillsModel>> userSkillsMap = new();
+
     protected override async Task OnInitializedAsync()
     {
         await LoadUsers();
+        await LoadAllSkills();
+
+        foreach (var u in users)
+        {
+            var skillsForUser = await Http.GetFromJsonAsync<List<UsersSkillsModel>>(
+                $"api/usersskills/getuserskills/{u.UserId}") ?? new List<UsersSkillsModel>();
+
+            userSkillsMap[u.UserId] = skillsForUser;
+        }
     }
-    
-    // Liste med alle brugere fra databasen
-    private List<UserModel> users = new();
-    
-    // Henter brugere fra API’et (bliver brugt flere gange)
+
+
     private async Task LoadUsers()
     {
-        users = await Http.GetFromJsonAsync<List<UserModel>>("api/users/allusers");
-        if (users == null)
+        users = await Http.GetFromJsonAsync<List<UserModel>>("api/users/allusers") ?? new List<UserModel>();
+    }
+
+    private async Task LoadAllSkills()
+    {
+        skills = await Http.GetFromJsonAsync<List<SkillModel>>("api/skills/allskills") ?? new List<SkillModel>();
+    }
+
+    private async Task AddSelectedSkill()
+    {
+        if (selectedUserId.HasValue && selectedSkillId.HasValue)
         {
-            users = new List<UserModel>();
+            await Http.PostAsync($"api/usersskills/adduserskill/{selectedSkillId}/{selectedUserId}", null);
+
+            // Nulstil dropdowns
+            selectedUserId = null;
+            selectedSkillId = null;
         }
     }
 }
-
