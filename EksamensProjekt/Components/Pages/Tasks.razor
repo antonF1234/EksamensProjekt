@@ -5,54 +5,76 @@
 @inject IJSRuntime JS
 @rendermode InteractiveServer
 
-<h3>Opgaver</h3>
-
-<!-- Opret ny task -->
-<EditForm Model="newTask" OnValidSubmit="CreateNewTask">
+<h3>Opret ny opgave</h3>
+<EditForm Model="newTask" OnValidSubmit="CreateNewTask" class="mb-4">
     <DataAnnotationsValidator />
-    <div class="mb-3">
-        <label class="form-label">Navn</label>
-        <InputText class="form-control" @bind-Value="newTask.Name" />
+    <div class="row g-2">
+        <div class="col-md-2">
+            <InputText class="form-control" placeholder="Navn" @bind-Value="newTask.Name" />
+        </div>
+        <div class="col-md-2">
+            <InputDate class="form-control" @bind-Value="newTask.StartDate" />
+        </div>
+        <div class="col-md-2">
+            <InputDate class="form-control" @bind-Value="newTask.Deadline" />
+        </div>
+        <div class="col-md-2">
+            <InputText class="form-control" placeholder="Status" @bind-Value="newTask.Status" />
+        </div>
+        <div class="col-md-2">
+            <select class="form-select" @bind="selectedProjectId">
+                <option value="">Vælg projekt...</option>
+                @foreach (var project in projects)
+                {
+                    <option value="@project.ProjectId">@project.Name</option>
+                }
+            </select>
+        </div>
+        <div class="col-md-2">
+            <button class="btn btn-primary w-100" type="submit">Opret</button>
+        </div>
     </div>
-    <div class="mb-3">
-        <label class="form-label">Start dato</label>
-        <InputDate class="form-control" @bind-Value="newTask.StartDate" />
-    </div>
-    <div class="mb-3">
-        <label class="form-label">Deadline</label>
-        <InputDate class="form-control" @bind-Value="newTask.Deadline" />
-    </div>
-    <div class="mb-3">
-        <label class="form-label">Status</label>
-        <InputText class="form-control" @bind-Value="newTask.Status" />
-    </div>
-    <div class="mb-3">
-        <label class="form-label">Projekt</label>
-        <select class="form-select" @bind="selectedProjectId">
-            <option value="">Vælg projekt...</option>
-            @foreach (var project in projects)
+</EditForm>
+
+<div class="row mb-4">
+    <div class="col-md-4">
+        <select class="form-select" @bind="selectedUserId">
+            <option value="">Vælg bruger...</option>
+            @foreach (var u in users)
             {
-                <option value="@project.ProjectId">@project.Name</option>
+                <option value="@u.UserId">@u.Username</option>
             }
         </select>
     </div>
-    <button class="btn btn-primary" type="submit">Opret opgave</button>
-</EditForm>
+    <div class="col-md-4">
+        <select class="form-select" @bind="selectedTaskId">
+            <option value="">Vælg opgave...</option>
+            @foreach (var task in tasks)
+            {
+                <option value="@task.TaskId">@task.Name</option>
+            }
+        </select>
+    </div>
+    <div class="col-md-4">
+        <button class="btn btn-primary w-100" @onclick="AddSelectedUser" disabled="@(!CanAdd)">
+            Tilføj bruger til opgave
+        </button>
+    </div>
+</div>
 
 <hr />
 
-<!-- GRUPPERET LISTE OVER TASKS -->
 @if (groupedTasks.Count == 0)
 {
     <p>Ingen opgaver</p>
 }
 else
 {
-    @foreach (var group in groupedTasks)
+    @foreach (var taskGroup in groupedTasks)
     {
-        <h4 class="mt-4">@group.Project?.Name</h4>
+        <h4 class="mt-4">@taskGroup.Project?.Name</h4>
 
-        @foreach (var task in group.Tasks)
+        @foreach (var task in taskGroup.Tasks)
         {
             <div class="card mb-3">
                 <div class="card-body">
@@ -63,6 +85,16 @@ else
                         <li><strong>Completed:</strong> @task.CompletionDate</li>
                         <li><strong>Status:</strong> @task.Status</li>
                     </ul>
+
+                    @if (taskUsersMap.ContainsKey(task.TaskId))
+                    {
+                        <div class="mt-2">
+                            @foreach (var user in taskUsersMap[task.TaskId])
+                            {
+                                <span class="badge bg-primary me-1">@user.Username</span>
+                            }
+                        </div>
+                    }
 
                     <button class="btn btn-primary btn-sm mt-2" @onclick="() => OpenUpdateTaskModal(task)">Updater</button>
                     <button class="btn btn-danger btn-sm mt-2" @onclick="() => DeleteTask(task.TaskId)">Slet</button>
@@ -109,13 +141,11 @@ else
     private List<ProjectGroup> groupedTasks = new();
     private int selectedProjectId;
     private bool showUpdateTaskModal = false;
-
-    protected override async Task OnInitializedAsync()
-    {
-        projects = await Http.GetFromJsonAsync<List<ProjectModel>>("api/all") ?? new List<ProjectModel>();
-        await LoadAllTasks();
-        await GroupTasks();
-    }
+    private List<UserModel> users = new();
+    private int? selectedUserId;
+    private int? selectedTaskId;
+    private bool CanAdd => selectedUserId.HasValue && selectedTaskId.HasValue;
+    private Dictionary<int, List<UserModel>> taskUsersMap = new();
 
     private async Task LoadAllTasks()
     {
@@ -125,7 +155,6 @@ else
     private async Task GroupTasks()
     {
         groupedTasks.Clear();
-
         var projectIds = tasks.Select(t => t.ProjectId).Distinct();
 
         foreach (var pid in projectIds)
@@ -148,8 +177,19 @@ else
         await Http.PostAsJsonAsync($"api/tasks/createtask/{selectedProjectId}", newTask);
         await LoadAllTasks();
         await GroupTasks();
-
+        await LoadTaskUsers(); // opdater map
         newTask = new TaskModel();
+    }
+
+    private async Task LoadTaskUsers()
+    {
+        taskUsersMap.Clear();
+        foreach (var task in tasks)
+        {
+            var usersForTask = await Http.GetFromJsonAsync<List<UserModel>>(
+                $"api/userstasks/getusersfromtask/{task.TaskId}") ?? new List<UserModel>();
+            taskUsersMap[task.TaskId] = usersForTask;
+        }
     }
 
     private async Task DeleteTask(int tid)
@@ -158,11 +198,11 @@ else
             return;
 
         var response = await Http.DeleteAsync($"api/tasks/delete/{tid}");
-
         if (response.IsSuccessStatusCode)
         {
             await LoadAllTasks();
             await GroupTasks();
+            await LoadTaskUsers();
         }
     }
 
@@ -192,13 +232,38 @@ else
         if (SelectedTask == null) return;
 
         var response = await Http.PutAsJsonAsync($"api/tasks/update/{SelectedTask.TaskId}", SelectedTask);
-
         if (response.IsSuccessStatusCode)
         {
             await LoadAllTasks();
             await GroupTasks();
+            await LoadTaskUsers();
             CloseUpdateTaskModal();
         }
+    }
+
+    private async Task AddSelectedUser()
+    {
+        if (selectedUserId.HasValue && selectedTaskId.HasValue)
+        {
+            await Http.PostAsync($"api/userstasks/addusertask/{selectedTaskId}/{selectedUserId}", null);
+            selectedUserId = null;
+            selectedTaskId = null;
+            await LoadTaskUsers();
+        }
+    }
+
+    private async Task LoadUsers()
+    {
+        users = await Http.GetFromJsonAsync<List<UserModel>>("api/users/allusers") ?? new List<UserModel>();
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        projects = await Http.GetFromJsonAsync<List<ProjectModel>>("api/all") ?? new List<ProjectModel>();
+        await LoadAllTasks();
+        await GroupTasks();
+        await LoadUsers();
+        await LoadTaskUsers();
     }
 
     private class ProjectGroup

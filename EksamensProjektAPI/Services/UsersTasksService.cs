@@ -16,4 +16,10 @@ public class UsersTasksService
     {
         return await _repo.GetAllUserTasksAsync(userId);
     }
+
+    public async Task<List<UserModel>> GetAllUsersOnTask(int taskId)
+    {
+        return await _repo.GetUsersByTaskIdAsync(taskId);
+    }
+
 }

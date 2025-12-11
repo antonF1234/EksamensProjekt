@@ -30,5 +30,12 @@ public class UsersTasksController : ControllerBase
         var tasks = await _userTasksService.GetAllUserTasksAsync(userId);
         return Ok(tasks);
     }
-    
+
+    [HttpGet("getusersfromtask/{taskId}")]
+    public async Task<IActionResult> GetAllUsersFromTask(int taskId)
+    {
+        var users = await _userTasksService.GetAllUsersOnTask(taskId);
+        return Ok(users);
+    }
+
 }

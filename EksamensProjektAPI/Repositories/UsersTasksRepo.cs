@@ -69,4 +69,32 @@ public class UsersTasksRepo
         return usersTasks;
     }
     
+    public async Task<List<UserModel>> GetUsersByTaskIdAsync(int taskId)
+    {
+        await using var conn = new NpgsqlConnection(Conn);
+        await conn.OpenAsync();
+
+        var users = new List<UserModel>();
+
+        await using var cmd = new NpgsqlCommand(@"
+        SELECT u.user_id, u.username
+        FROM users u
+        INNER JOIN users_tasks ut ON u.user_id = ut.user_id
+        WHERE ut.task_id = @TaskId
+    ", conn);
+
+        cmd.Parameters.AddWithValue("TaskId", taskId);
+
+        await using var reader = await cmd.ExecuteReaderAsync();
+        while (await reader.ReadAsync())
+        {
+            users.Add(new UserModel
+            {
+                UserId = reader.GetInt32(0),
+                Username = reader.GetString(1)
+            });
+        }
+
+        return users;
+    }
 }
