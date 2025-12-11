@@ -21,7 +21,8 @@ else
 {
     @foreach (var group in groupedTasks)
     {
-        <h4 class="mt-4">@group.Project?.ProjectId (@group.Project?.ProjectId)</h4>
+        <!-- ✔️ RIGTIG OVERSKRIFT: Projektnavn fra /api/{id} -->
+        <h4 class="mt-4">@group.Project?.Name</h4>
 
         <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4">
             @foreach (var t in group.Tasks)
@@ -79,11 +80,12 @@ else
         {
             userId = await LS.GetItemAsync<int>("userid");
 
-            // Hent tasks
-            tasks = await Http.GetFromJsonAsync<List<UsersTasksModel>>($"api/userstasks/getuserstasks/{userId}")
-                    ?? new List<UsersTasksModel>();
+            // Hent alle brugerens tasks
+            tasks = await Http.GetFromJsonAsync<List<UsersTasksModel>>(
+                $"api/userstasks/getuserstasks/{userId}"
+            ) ?? new List<UsersTasksModel>();
 
-            // Gruppér efter ProjectId + hent projektinfo
+            // Gruppér og hent projektinfo
             await GroupTasksByProject();
 
             isLoaded = true;
@@ -95,14 +97,15 @@ else
     {
         groupedTasks.Clear();
 
+        // Find alle unikke projekt IDs
         var projectIds = tasks.Select(t => t.ProjectId).Distinct();
 
         foreach (var projectId in projectIds)
         {
-            // Hent projekt-info
+            // Hent projektinfo via /api/{id}
             var project = await Http.GetFromJsonAsync<ProjectModel>($"api/{projectId}");
 
-            // Tilføj gruppen
+            // Lav gruppen med projekt + dens tasks
             groupedTasks.Add(new ProjectGroup
             {
                 Project = project,
@@ -122,12 +125,9 @@ else
             var task = tasks.FirstOrDefault(t => t.TaskId == taskId);
             if (task != null) task.Status = status;
         }
-        else
-        {
-            Console.WriteLine($"Fejl ved opdatering: {response.ReasonPhrase}");
-        }
 
-        await GroupTasksByProject(); // Opdater grupperne igen
+        // Opdater grupperne igen
+        await GroupTasksByProject();
         StateHasChanged();
     }
 

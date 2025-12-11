@@ -39,23 +39,37 @@
     <button class="btn btn-primary" type="submit">Opret opgave</button>
 </EditForm>
 
-<!-- Liste over tasks -->
-@foreach (var task in tasks)
-{
-    <div class="card mb-3">
-        <div class="card-body">
-            <h5 class="card-title">@task.Name</h5>
-            <ul class="list-unstyled mb-0">
-                <li><strong>Start:</strong> @task.StartDate</li>
-                <li><strong>Deadline:</strong> @task.Deadline</li>
-                <li><strong>Completed:</strong> @task.CompletionDate</li>
-                <li><strong>Status:</strong> @task.Status</li>
-            </ul>
+<hr />
 
-            <button class="btn btn-primary btn-sm mt-2" @onclick="() => OpenUpdateTaskModal(task)">Updater</button>
-            <button class="btn btn-danger btn-sm mt-2" @onclick="() => DeleteTask(task.TaskId)">Slet</button>
-        </div>
-    </div>
+<!-- GRUPPERET LISTE OVER TASKS -->
+@if (groupedTasks.Count == 0)
+{
+    <p>Ingen opgaver</p>
+}
+else
+{
+    @foreach (var group in groupedTasks)
+    {
+        <h4 class="mt-4">@group.Project?.Name</h4>
+
+        @foreach (var task in group.Tasks)
+        {
+            <div class="card mb-3">
+                <div class="card-body">
+                    <h5 class="card-title">@task.Name</h5>
+                    <ul class="list-unstyled mb-0">
+                        <li><strong>Start:</strong> @task.StartDate</li>
+                        <li><strong>Deadline:</strong> @task.Deadline</li>
+                        <li><strong>Completed:</strong> @task.CompletionDate</li>
+                        <li><strong>Status:</strong> @task.Status</li>
+                    </ul>
+
+                    <button class="btn btn-primary btn-sm mt-2" @onclick="() => OpenUpdateTaskModal(task)">Updater</button>
+                    <button class="btn btn-danger btn-sm mt-2" @onclick="() => DeleteTask(task.TaskId)">Slet</button>
+                </div>
+            </div>
+        }
+    }
 }
 
 <!-- Modal til opdatering af task -->
@@ -82,7 +96,7 @@
                 <InputText class="form-control" @bind-Value="SelectedTask.Status" />
             </div>
             <button class="btn btn-success me-2" type="submit">Gem</button>
-            <button class="btn btn-secondary" type="button" @onclick="CloseUpdateTaskModal">Luk</button>
+            <button class="btn btn-secondary" @onclick="CloseUpdateTaskModal" type="button">Luk</button>
         </EditForm>
     </div>
 }
@@ -92,13 +106,15 @@
     private TaskModel? SelectedTask;
     private List<TaskModel> tasks = new();
     private List<ProjectModel> projects = new();
+    private List<ProjectGroup> groupedTasks = new();
     private int selectedProjectId;
     private bool showUpdateTaskModal = false;
 
     protected override async Task OnInitializedAsync()
     {
-        await LoadAllTasks();
         projects = await Http.GetFromJsonAsync<List<ProjectModel>>("api/all") ?? new List<ProjectModel>();
+        await LoadAllTasks();
+        await GroupTasks();
     }
 
     private async Task LoadAllTasks()
@@ -106,36 +122,52 @@
         tasks = await Http.GetFromJsonAsync<List<TaskModel>>("api/tasks/all") ?? new List<TaskModel>();
     }
 
+    private async Task GroupTasks()
+    {
+        groupedTasks.Clear();
+
+        var projectIds = tasks.Select(t => t.ProjectId).Distinct();
+
+        foreach (var pid in projectIds)
+        {
+            var project = await Http.GetFromJsonAsync<ProjectModel>($"api/{pid}");
+            var projectTasks = tasks.Where(t => t.ProjectId == pid).ToList();
+
+            groupedTasks.Add(new ProjectGroup
+            {
+                Project = project,
+                Tasks = projectTasks
+            });
+        }
+    }
+
     private async Task CreateNewTask()
     {
         if (selectedProjectId == 0) return;
+
         await Http.PostAsJsonAsync($"api/tasks/createtask/{selectedProjectId}", newTask);
         await LoadAllTasks();
+        await GroupTasks();
+
         newTask = new TaskModel();
     }
 
     private async Task DeleteTask(int tid)
     {
-        bool confirmed = await JS.InvokeAsync<bool>("confirm", "Er du sikker på du vil slette denne task?");
-        if (confirmed)
+        if (!await JS.InvokeAsync<bool>("confirm", "Er du sikker på du vil slette denne task?"))
+            return;
+
+        var response = await Http.DeleteAsync($"api/tasks/delete/{tid}");
+
+        if (response.IsSuccessStatusCode)
         {
-            Console.WriteLine("Sletter task med ID: " + tid);
-            var response = await Http.DeleteAsync($"api/tasks/delete/{tid}");
-            if (response.IsSuccessStatusCode)
-            {
-                await LoadAllTasks();
-            }
-            else
-            {
-                Console.WriteLine("Fejl ved sletning af task: " + response.StatusCode);
-            }
+            await LoadAllTasks();
+            await GroupTasks();
         }
     }
 
-
     private void OpenUpdateTaskModal(TaskModel task)
     {
-        Console.WriteLine($"Åbner modal for TaskId: {task.TaskId}");
         SelectedTask = new TaskModel
         {
             TaskId = task.TaskId,
@@ -149,7 +181,6 @@
         showUpdateTaskModal = true;
     }
 
-
     private void CloseUpdateTaskModal()
     {
         SelectedTask = null;
@@ -158,21 +189,21 @@
 
     private async Task UpdateTask()
     {
-        if (SelectedTask != null)
-        {
-            var response = await Http.PutAsJsonAsync($"api/tasks/update/{SelectedTask.TaskId}", SelectedTask);
+        if (SelectedTask == null) return;
 
-            if (response.IsSuccessStatusCode)
-            {
-                await LoadAllTasks();
-                CloseUpdateTaskModal();
-            }
-            else
-            {
-                Console.WriteLine("Fejl ved opdatering af task: " + response.StatusCode);
-            }
+        var response = await Http.PutAsJsonAsync($"api/tasks/update/{SelectedTask.TaskId}", SelectedTask);
+
+        if (response.IsSuccessStatusCode)
+        {
+            await LoadAllTasks();
+            await GroupTasks();
+            CloseUpdateTaskModal();
         }
     }
-    
-    
+
+    private class ProjectGroup
+    {
+        public ProjectModel? Project { get; set; }
+        public List<TaskModel> Tasks { get; set; } = new();
+    }
 }
