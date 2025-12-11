@@ -254,12 +254,12 @@ else
 
     private async Task LoadUsers()
     {
-        users = await Http.GetFromJsonAsync<List<UserModel>>("api/users/allusers") ?? new List<UserModel>();
+        users = await Http.GetFromJsonAsync<List<UserModel>>("api/users/allusers"); // ?? new List<UserModel>();
     }
 
     protected override async Task OnInitializedAsync()
     {
-        projects = await Http.GetFromJsonAsync<List<ProjectModel>>("api/all") ?? new List<ProjectModel>();
+        projects = await Http.GetFromJsonAsync<List<ProjectModel>>("api/all"); //?? new List<ProjectModel>();
         await LoadAllTasks();
         await GroupTasks();
         await LoadUsers();
