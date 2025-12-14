@@ -79,7 +79,6 @@ public class TaskController : ControllerBase
             return NotFound();
         }
 
-
         task.Name = model.Name;
         task.StartDate = model.StartDate;
         task.Deadline = model.Deadline;
@@ -87,9 +86,8 @@ public class TaskController : ControllerBase
         task.Status = model.Status;
         task.ProjectId = model.ProjectId;
         
-        
-
         await _taskService.UpdateAsync(task);
         return Ok();
     }
+    
 }

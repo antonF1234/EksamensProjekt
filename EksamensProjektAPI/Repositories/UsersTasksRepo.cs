@@ -97,4 +97,19 @@ public class UsersTasksRepo
 
         return users;
     }
+    
+    public async Task DelUserFromTask(int taskId, int userId)
+    {
+        await using var conn = new NpgsqlConnection(Conn);
+        await conn.OpenAsync();
+        
+        await using var cmd = new NpgsqlCommand(
+            "DELETE FROM users_tasks WHERE user_id = @user_id AND task_id = @task_id",
+            conn);
+
+        cmd.Parameters.AddWithValue("user_id", userId);
+        cmd.Parameters.AddWithValue("task_id", taskId);
+        
+        await cmd.ExecuteNonQueryAsync();
+    }
 }

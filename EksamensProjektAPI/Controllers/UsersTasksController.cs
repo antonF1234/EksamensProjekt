@@ -37,5 +37,11 @@ public class UsersTasksController : ControllerBase
         var users = await _userTasksService.GetAllUsersOnTask(taskId);
         return Ok(users);
     }
-
+    
+    [HttpDelete("deluserfromtask/{taskId}/{userId}")]
+    public async Task<IActionResult> DeleteAsyncUserSkill(int taskId, int userId)
+    {
+        await _userTasksService.DeleteUserTaskAsync(taskId, userId);
+        return Ok();
+    }
 }

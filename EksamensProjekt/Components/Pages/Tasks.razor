@@ -91,8 +91,15 @@ else
                         <div class="mt-2">
                             @foreach (var user in taskUsersMap[task.TaskId])
                             {
-                                <span class="badge bg-primary me-1">@user.Username</span>
+                                <span class="badge bg-primary me-1">
+                                    @user.Username
+                                    <button class="btn btn-sm btn-link text-white p-0 ms-1"
+                                            @onclick="() => DelUserFromTask(task.TaskId, user.UserId)">
+                                        ✕
+                                    </button>
+                                </span>
                             }
+
                         </div>
                     }
 
@@ -270,5 +277,17 @@ else
     {
         public ProjectModel? Project { get; set; }
         public List<TaskModel> Tasks { get; set; } = new();
+    }
+
+    private async Task DelUserFromTask(int taskId, int userId)
+    {
+        await Http.DeleteAsync(
+            $"api/userstasks/deluserfromtask/{taskId}/{userId}");
+
+        tasks.Clear();
+        groupedTasks.Clear();
+        taskUsersMap.Clear();
+
+        await OnInitializedAsync();
     }
 }

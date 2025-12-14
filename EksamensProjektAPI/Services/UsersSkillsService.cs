@@ -17,8 +17,8 @@ public class UsersSkillsService
         return await _repo.GetAllUserSkillsAsync(userId);
     }
     
-    public async Task DeleteUserSkillAsync(int userSkillId)
+    public async Task DeleteUserSkillAsync(int skillId, int userId)
     {
-        await _repo.DeleteAsync(userSkillId);
+        await _repo.DeleteAsync(skillId, userId);
     }
 }

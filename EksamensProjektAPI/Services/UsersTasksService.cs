@@ -22,4 +22,9 @@ public class UsersTasksService
         return await _repo.GetUsersByTaskIdAsync(taskId);
     }
 
+    public async Task DeleteUserTaskAsync(int taskId, int userId)
+    {
+        await _repo.DelUserFromTask(taskId, userId);
+    }
+
 }

@@ -8,7 +8,6 @@
 @inject IJSRuntime JS
 
 <h3>Tilføj skill til bruger</h3>
-
 <div class="row mb-4">
     <div class="col-md-4">
         <select class="form-select" @bind="selectedUserId">
@@ -35,8 +34,6 @@
     </div>
 </div>
 
-<hr />
-
 @if (users == null)
 {
     <p>Henter brugere fra databasen...</p>
@@ -61,8 +58,15 @@ else
                             <div class="mt-2">
                                 @foreach (var skill in userSkillsMap[u.UserId])
                                 {
-                                    <span class="badge bg-primary me-1">@skill.SkillName</span>
+                                    <span class="badge bg-primary me-1">
+                                        @skill.SkillName
+                                        <button class="btn btn-sm btn-link text-white p-0 ms-1"
+                                                @onclick="() => DeleteUserSkill(u.UserId, skill.SkillId)">
+                                            ✕
+                                        </button>
+                                    </span>
                                 }
+
                             </div>
                         }
                     </div>
@@ -118,6 +122,19 @@ else
             // Nulstil dropdowns
             selectedUserId = null;
             selectedSkillId = null;
+            
+            // genindlæs alt, mega ueffektivt men er ligeglad :=)
+            users.Clear();
+            userSkillsMap.Clear();
+            await OnInitializedAsync();
         }
+    }
+    private async Task DeleteUserSkill(int userId, int skillId)
+    {
+        await Http.DeleteAsync(
+            $"api/usersskills/deleteuserskill/{skillId}/{userId}");
+        users.Clear();
+        userSkillsMap.Clear();
+        await OnInitializedAsync();
     }
 }

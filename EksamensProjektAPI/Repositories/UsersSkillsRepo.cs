@@ -57,15 +57,16 @@ public class UsersSkillsRepo
     }
 
 
-    public async Task DeleteAsync(int userSkillId)
+    public async Task DeleteAsync(int skillId, int userId)
     {
         await using var conn = new NpgsqlConnection(Conn);
         await conn.OpenAsync();
         
         await using var cmd = new NpgsqlCommand(
-            "DELETE FROM users_skills WHERE employee_skill_id = @employee_skill_id", conn);
+            "DELETE FROM users_skills WHERE skill_id = @skill_id AND employee_id = @userId", conn);
         
-        cmd.Parameters.AddWithValue("employee_skill_id", userSkillId);
+        cmd.Parameters.AddWithValue("skill_id", skillId);
+        cmd.Parameters.AddWithValue("userId", userId);
         
         await cmd.ExecuteNonQueryAsync();
     }

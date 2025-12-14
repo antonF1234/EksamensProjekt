@@ -32,10 +32,10 @@ public class UsersSkillsController : ControllerBase
         return Ok(skills);
     }
     
-    [HttpDelete("deleteuserskill/{userSkillId}")]
-    public async Task<IActionResult> DeleteAsyncUserSkill(int userSkillId)
+    [HttpDelete("deleteuserskill/{skillId}/{userId}")]
+    public async Task<IActionResult> DeleteAsyncUserSkill(int skillId, int userId)
     {
-        await _usersSkillsService.DeleteUserSkillAsync(userSkillId);
+        await _usersSkillsService.DeleteUserSkillAsync(skillId, userId);
         return Ok();
     }
 }
