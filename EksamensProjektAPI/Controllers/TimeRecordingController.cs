@@ -20,4 +20,16 @@ public class TimeRecordsController : ControllerBase
         var data = await _service.GetForUserAsync(userId);
         return Ok(data);
     }
+
+    [HttpPost("startrecord/{userid}/{taskid}")]
+    public async Task StartTimeRecording(int userid, int taskid)
+    {
+      await _service.StartTimeRecording(userid, taskid);  
+    }
+
+    [HttpPost("endrecord/{userid}/{taskid}")]
+    public async Task EndTimeRecording(int userid, int taskid)
+    {
+        await _service.EndTimeRecording(userid, taskid);
+    }
 }
