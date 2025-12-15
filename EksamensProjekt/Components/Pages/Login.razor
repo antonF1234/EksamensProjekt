@@ -1,9 +1,8 @@
 ﻿@page "/login"
 @using EksamensProjekt.Models
-@inject UserRepo Users
-@inject AuthState Auth
 @inject Blazored.LocalStorage.ILocalStorageService LS
 @inject NavigationManager Nav
+@inject HttpClient Http
 @rendermode InteractiveServer
 
 <h3>Login</h3>
@@ -17,31 +16,38 @@
 <p>@msg</p>
 
 @code {
-    string username = "";
-    string password = "";
-    string msg = "";
+    private string username = string.Empty;
+    private string password = string.Empty;
+    private string msg = string.Empty;
 
-    async Task DoLogin()
+    private async Task DoLogin()
     {
-        // fetch user info by using username
-        var user = await Users.GetByUsernameAsync(username);
-        if (user == null || !BCrypt.Net.BCrypt.Verify(password, user.Password))
+        var response = await Http.PostAsJsonAsync("api/auth/login", new UserModel
+        {
+            Username = username,
+            Password = password
+        });
+
+        if (!response.IsSuccessStatusCode)
         {
             msg = "Forkert brugernavn eller kode";
             return;
         }
-        // we need 3 things, username, id and isadmin
-        Auth.CurrentUser = user.Username;
-        Auth.UserId = user.UserId;
-        Auth.IsAdmin = user.IsAdmin;
 
-        // take the data from the database and place it in localstorare for that user
-        await LS.SetItemAsync("loggedin", user.Username);
-        await LS.SetItemAsync("userid", user.UserId);
-        await LS.SetItemAsync("isadmin", user.IsAdmin);
-        
-        // finaly navigate to /
+        var userData = await response.Content.ReadFromJsonAsync<UserModel>();
+        if (userData == null)
+        {
+            msg = "Noget gik galt";
+            return;
+        }
+
+        // Gem i local storage
+        await LS.SetItemAsync("loggedin", userData.Username);
+        await LS.SetItemAsync("userid", userData.UserId);
+        await LS.SetItemAsync("isadmin", userData.IsAdmin);
+
+        // Refresh og naviger til root
+        Nav.NavigateTo(Nav.Uri, forceLoad: true);
         Nav.NavigateTo("/");
     }
-
 }

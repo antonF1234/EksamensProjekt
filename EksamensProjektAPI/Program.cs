@@ -20,6 +20,9 @@ builder.Services.AddScoped<UsersTasksService>();
 builder.Services.AddScoped<UsersTasksRepo>();
 builder.Services.AddScoped<TimeRecordingsRepo>();
 builder.Services.AddScoped<TimeRecordingsService>();
+builder.Services.AddScoped<AuthRepo>();
+builder.Services.AddScoped<AuthService>();
+
 
 var app = builder.Build();
 

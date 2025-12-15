@@ -39,16 +39,24 @@ else
         }
         </tbody>
     </table>
-    <div class="mb-3">
-        <button class="btn btn-success me-2" @onclick="Start">
-            ▶️ Start tid
-        </button>
-
-        <button class="btn btn-danger" @onclick="Stop">
-            ⏹ Stop tid
-        </button>
-    </div>
 }
+
+<div class="mb-3">
+    <button class="btn btn-success me-2" @onclick="Start">
+        ▶️ Start tid
+    </button>
+
+    <button class="btn btn-danger" @onclick="Stop">
+        ⏹ Stop tid
+    </button>
+    <select class="form-select mb-2" @onchange="OnStatusChanged">
+        <option value="">--Vælg Opgave--</option>
+        <option value="Igang">Mal gæsteværelse</option>
+        <option value="Færdig">Opgave2</option>
+        <option value="På vent">Opgave3</option>
+        <option value="Afbrudt">Opgave4</option>
+    </select>
+</div>
 
 @code {
     private List<TimeRecordingModel>? records;
@@ -102,5 +110,17 @@ else
                 $"api/timerecords/user/{userId}"
             );
             StateHasChanged();
+        }
+        
+        
+        // MOCK
+        
+        private string selectedStatus = "";
+
+        private void OnStatusChanged(ChangeEventArgs e)
+        {
+            selectedStatus = e.Value?.ToString() ?? "";
+            // Her kan du tilføje logik, fx opdatere en task
+            Console.WriteLine($"Valgt status: {selectedStatus}");
         }
 }

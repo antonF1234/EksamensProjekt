@@ -25,8 +25,15 @@
     </div>
     <div class="mb-3">
         <label class="form-label">Status</label>
-        <InputText class="form-control" @bind-Value="newProject.Status" />
+        <select class="form-select" @bind="newProject.Status">
+            <option value="">--Vælg status--</option>
+            <option value="Igang">Igang</option>
+            <option value="Færdig">Færdig</option>
+            <option value="På vent">På vent</option>
+            <option value="Afbrudt">Afbrudt</option>
+        </select>
     </div>
+
     <button class="btn btn-primary" type="submit">Opret projekt</button>
 
 
@@ -157,8 +164,15 @@ else
 
             <div class="mb-3">
                 <label>Status</label>
-                <InputText class="form-control" @bind-Value="selectedProject.Status" />
+                <select class="form-select" @bind="selectedProject.Status">
+                    <option value="">--Vælg status--</option>
+                    <option value="Igang">Igang</option>
+                    <option value="Færdig">Færdig</option>
+                    <option value="På vent">På vent</option>
+                    <option value="Afbrudt">Afbrudt</option>
+                </select>
             </div>
+
 
             <button class="btn btn-success me-2" type="submit">Gem</button>
             <button class="btn btn-secondary" type="button" @onclick="CloseUpdateProjectModal">Luk</button>
