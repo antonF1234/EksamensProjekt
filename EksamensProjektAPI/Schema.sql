@@ -6,7 +6,8 @@ DROP TABLE IF EXISTS tasks CASCADE;
 DROP TABLE IF EXISTS skills CASCADE;
 DROP TABLE IF EXISTS projects CASCADE;
 DROP TABLE IF EXISTS users CASCADE;
-
+DROP TABLE IF EXISTS users_tasks CASCADE;
+DROP TABLE IF EXISTS time_recording CASCADE;
 
 -- USERS
 CREATE TABLE users (
@@ -88,3 +89,15 @@ CREATE TABLE users_tasks (
 
 CREATE INDEX idx_users_tasks_user ON users_tasks(user_id);
 CREATE INDEX idx_users_tasks_task ON users_tasks(task_id);
+
+CREATE TABLE time_recording (
+    time_record_id SERIAL PRIMARY KEY,
+    user_id INT REFERENCES users(user_id),
+    task_id INT REFERENCES tasks(task_id),
+    start_time TIMESTAMP,
+    end_time TIMESTAMP,
+    sum_of_time_second INT
+)
+
+CREATE INDEX idx_time_recording_user ON time_recording(user_id);
+CREATE INDEX idx_time_recording_task ON time_recording(task_id);
