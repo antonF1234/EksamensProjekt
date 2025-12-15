@@ -7,21 +7,42 @@
 
 <h3>Login</h3>
 
-<input @bind="username" placeholder="Brugernavn" />
-<br />
-<input type="password" @bind="password" placeholder="Kode" />
-<br />
-<button @onclick="DoLogin">Login</button>
+<form @onsubmit="DoLogin" @onsubmit:preventDefault="true" class="login-form">
+    <div class="form-group">
+        <label for="username">Brugernavn</label>
+        <input id="username" @bind="username" placeholder="Brugernavn" />
+    </div>
 
-<p>@msg</p>
+    <div class="form-group">
+        <label for="password">Kode</label>
+        <input id="password" type="password" @bind="password" placeholder="Kode" />
+    </div>
+
+    <button type="submit">Login</button>
+</form>
+
+@if (!string.IsNullOrEmpty(msg))
+{
+    <p style="color:red;">@msg</p>
+}
+
+@if (showToast)
+{
+    <div class="side-toast">
+        ✅ Login succes! Velkommen, @username
+    </div>
+}
 
 @code {
     private string username = string.Empty;
     private string password = string.Empty;
     private string msg = string.Empty;
+    private bool showToast = false;
 
     private async Task DoLogin()
     {
+        msg = string.Empty;
+
         var response = await Http.PostAsJsonAsync("api/auth/login", new UserModel
         {
             Username = username,
@@ -46,7 +67,16 @@
         await LS.SetItemAsync("userid", userData.UserId);
         await LS.SetItemAsync("isadmin", userData.IsAdmin);
 
-        // Refresh og naviger til root
+        // Vis toast
+        showToast = true;
+        StateHasChanged(); // sørg for at toast renderes
+
+        await Task.Delay(2000);
+
+        showToast = false;
+        StateHasChanged();
+
+        // Naviger og reload efter toast forsvinder
         Nav.NavigateTo(Nav.Uri, forceLoad: true);
         Nav.NavigateTo("/");
     }
