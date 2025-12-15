@@ -193,14 +193,12 @@ else
             result = result.Where(t => t.Status == filterStatus);
         
         //Sortering
-        result = sortBy switch
-        {
-
-            "deadline" => result.OrderBy(t => t.Deadline),
-            "status" => result.OrderBy(t => t.Status),
-            _ => result //brug listen som den allerede er (ingen sortering)
-                        // → det er det _ => result gør. Det er en default, hvis de andre ikke passer. En switch expression
-        };
+        if (sortBy == "deadline")
+            result = result.OrderBy(t => t.Deadline);
+        else if (sortBy == "status")
+            result = result.OrderBy(t => t.Status);
+        else
+            result = result;
 
         return result;
     }
