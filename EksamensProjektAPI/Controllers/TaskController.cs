@@ -80,6 +80,7 @@ public class TaskController : ControllerBase
         }
 
         task.Name = model.Name;
+        task.Description = model.Description;
         task.StartDate = model.StartDate;
         task.Deadline = model.Deadline;
         task.CompletionDate = model.CompletionDate;

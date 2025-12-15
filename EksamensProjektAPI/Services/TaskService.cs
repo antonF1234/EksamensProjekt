@@ -23,7 +23,7 @@ public class TaskService
     public async Task<UsersTasksModel?> UpdateAsync(int taskId, string status)
     {
         // Update the status directly via repo
-        await _repo.UpdateTaskAsync(taskId, status);
+        await _repo.UpdateTaskStatusAsync(taskId, status);
 
         // Fetch the updated task to return as UsersTasksModel
         var task = await _repo.GetByIdAsync(taskId);

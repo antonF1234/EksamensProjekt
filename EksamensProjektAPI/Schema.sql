@@ -44,6 +44,7 @@ CREATE INDEX idx_users_projects_project ON users_projects(project_id);
 CREATE TABLE tasks (
                        task_id          SERIAL PRIMARY KEY,
                        name             TEXT NOT NULL,
+                       description      TEXT,
                        start_date       DATE,
                        deadline         DATE,
                        completion_date  DATE,

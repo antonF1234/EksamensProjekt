@@ -13,10 +13,13 @@
             <InputText class="form-control" placeholder="Navn" @bind-Value="newTask.Name" />
         </div>
         <div class="col-md-2">
-            <InputDate class="form-control" @bind-Value="newTask.StartDate" />
+            <InputText class="form-control" placeholder="Beskrivelse" @bind-Value="newTask.Description" />
         </div>
         <div class="col-md-2">
             <InputDate class="form-control" @bind-Value="newTask.Deadline" />
+        </div>
+        <div class="col-md-2">
+            <InputDate class="form-control" @bind-Value="newTask.StartDate" />
         </div>
         <div class="col-md-2">
             <select class="form-select" @bind="newTask.Status">
@@ -85,6 +88,7 @@ else
             <div class="card mb-3">
                 <div class="card-body">
                     <h5 class="card-title">@task.Name</h5>
+                    <p class="card-text">@task.Description</p>
                     <ul class="list-unstyled mb-0">
                         <li><strong>Start:</strong> @task.StartDate</li>
                         <li><strong>Deadline:</strong> @task.Deadline</li>
@@ -128,6 +132,11 @@ else
                 <label class="form-label">Navn</label>
                 <InputText class="form-control" @bind-Value="SelectedTask.Name" />
             </div>
+            <div class="mb-3">
+                <label class="form-label">Beskrivelse</label>
+                <InputText class="form-control" @bind-Value="SelectedTask.Description" />
+            </div>
+            
             <div class="mb-3">
                 <label class="form-label">Start dato</label>
                 <InputDate class="form-control" @bind-Value="SelectedTask.StartDate" />
@@ -230,6 +239,7 @@ else
         {
             TaskId = task.TaskId,
             Name = task.Name,
+            Description = task.Description,
             StartDate = task.StartDate,
             Deadline = task.Deadline,
             CompletionDate = task.CompletionDate,

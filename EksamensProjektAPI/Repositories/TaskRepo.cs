@@ -14,7 +14,7 @@ public class TaskRepo
         await conn.OpenAsync();
 
         await using var cmd = new NpgsqlCommand(
-            "SELECT task_id, name, start_date, deadline, completion_date, status, project_id FROM tasks ORDER BY task_id",
+            "SELECT task_id, name, description, start_date, deadline, completion_date, status, project_id FROM tasks ORDER BY task_id",
             conn);
 
         await using var reader = await cmd.ExecuteReaderAsync();
@@ -26,11 +26,12 @@ public class TaskRepo
             {
                 TaskId = reader.GetInt32(0),
                 Name = reader.GetString(1),
-                StartDate = reader.IsDBNull(2) ? null : reader.GetDateTime(2),
-                Deadline = reader.IsDBNull(3) ? null : reader.GetDateTime(3),
-                CompletionDate = reader.IsDBNull(4) ? null : reader.GetDateTime(4),
-                Status = reader.IsDBNull(5) ? null : reader.GetString(5),
-                ProjectId = reader.GetInt32(6)
+                Description = reader.IsDBNull(2) ? null : reader.GetString(2),
+                StartDate = reader.IsDBNull(3) ? null : reader.GetDateTime(3),
+                Deadline = reader.IsDBNull(4) ? null : reader.GetDateTime(4),
+                CompletionDate = reader.IsDBNull(5) ? null : reader.GetDateTime(5),
+                Status = reader.IsDBNull(6) ? null : reader.GetString(6),
+                ProjectId = reader.GetInt32(7)
             });
         }
 
@@ -44,7 +45,7 @@ public class TaskRepo
         await conn.OpenAsync();
 
         await using var cmd = new NpgsqlCommand(
-            "SELECT task_id, name, start_date, deadline, completion_date, status, project_id FROM tasks WHERE task_id = @id",
+            "SELECT task_id, name, description, start_date, deadline, completion_date, status, project_id FROM tasks WHERE task_id = @id",
             conn);
 
         cmd.Parameters.AddWithValue("id", tid);
@@ -56,23 +57,24 @@ public class TaskRepo
         {
             TaskId = reader.GetInt32(0),
             Name = reader.GetString(1),
-            StartDate = reader.IsDBNull(2) ? null : reader.GetDateTime(2),
-            Deadline = reader.IsDBNull(3) ? null : reader.GetDateTime(3),
-            CompletionDate = reader.IsDBNull(4) ? null : reader.GetDateTime(4),
-            Status = reader.IsDBNull(5) ? null : reader.GetString(5),
-            ProjectId = reader.GetInt32(6)
+            Description = reader.IsDBNull(2) ? null : reader.GetString(2),
+            StartDate = reader.IsDBNull(3) ? null : reader.GetDateTime(3),
+            Deadline = reader.IsDBNull(4) ? null : reader.GetDateTime(4),
+            CompletionDate = reader.IsDBNull(5) ? null : reader.GetDateTime(5),
+            Status = reader.IsDBNull(6) ? null : reader.GetString(6),
+            ProjectId = reader.GetInt32(7)
         };
     }
-    
+
     public async Task<List<TaskModel>> GetByProjectIdAsync(int pid)
     {
         await using var conn = new NpgsqlConnection(Conn);
         await conn.OpenAsync();
 
         await using var cmd = new NpgsqlCommand(
-            "SELECT task_id, name, start_date, deadline, completion_date, status, project_id FROM tasks WHERE project_id = @pid ORDER BY project_id",
+            "SELECT task_id, name, description, start_date, deadline, completion_date, status, project_id FROM tasks WHERE project_id = @pid ORDER BY task_id",
             conn);
-        
+
         cmd.Parameters.AddWithValue("pid", pid);
 
         await using var reader = await cmd.ExecuteReaderAsync();
@@ -84,11 +86,12 @@ public class TaskRepo
             {
                 TaskId = reader.GetInt32(0),
                 Name = reader.GetString(1),
-                StartDate = reader.IsDBNull(2) ? null : reader.GetDateTime(2),
-                Deadline = reader.IsDBNull(3) ? null : reader.GetDateTime(3),
-                CompletionDate = reader.IsDBNull(4) ? null : reader.GetDateTime(4),
-                Status = reader.IsDBNull(5) ? null : reader.GetString(5),
-                ProjectId = reader.GetInt32(6)
+                Description = reader.IsDBNull(2) ? null : reader.GetString(2),
+                StartDate = reader.IsDBNull(3) ? null : reader.GetDateTime(3),
+                Deadline = reader.IsDBNull(4) ? null : reader.GetDateTime(4),
+                CompletionDate = reader.IsDBNull(5) ? null : reader.GetDateTime(5),
+                Status = reader.IsDBNull(6) ? null : reader.GetString(6),
+                ProjectId = reader.GetInt32(7)
             });
         }
 
@@ -102,10 +105,13 @@ public class TaskRepo
         await conn.OpenAsync();
 
         await using var cmd = new NpgsqlCommand(
-            "INSERT INTO tasks (name, start_date, deadline, completion_date, status, project_id) VALUES (@name, @start_date, @deadline, @completion_date, @status, @project_id)",
+            @"INSERT INTO tasks 
+              (name, description, start_date, deadline, completion_date, status, project_id) 
+              VALUES (@name, @description, @start_date, @deadline, @completion_date, @status, @project_id)",
             conn);
 
         cmd.Parameters.AddWithValue("name", task.Name);
+        cmd.Parameters.AddWithValue("description", (object?)task.Description ?? DBNull.Value);
         cmd.Parameters.AddWithValue("start_date", (object?)task.StartDate ?? DBNull.Value);
         cmd.Parameters.AddWithValue("deadline", (object?)task.Deadline ?? DBNull.Value);
         cmd.Parameters.AddWithValue("completion_date", (object?)task.CompletionDate ?? DBNull.Value);
@@ -114,17 +120,16 @@ public class TaskRepo
 
         await cmd.ExecuteNonQueryAsync();
     }
-    
-    public async Task UpdateTaskAsync(int taskId, string status)
+
+    public async Task UpdateTaskStatusAsync(int taskId, string status)
     {
         await using var conn = new NpgsqlConnection(Conn);
         await conn.OpenAsync();
 
-        // 1. opdater taskens status udfra id
         await using var cmd = new NpgsqlCommand(
             "UPDATE tasks SET status=@status WHERE task_id=@taskId",
             conn);
-        
+
         cmd.Parameters.AddWithValue("taskId", taskId);
         cmd.Parameters.AddWithValue("status", status);
 
@@ -135,13 +140,13 @@ public class TaskRepo
     {
         await using var conn = new NpgsqlConnection(Conn);
         await conn.OpenAsync();
-        
+
         await using var cmd = new NpgsqlCommand(
             "DELETE FROM tasks WHERE task_id=@taskId",
             conn);
-        
+
         cmd.Parameters.AddWithValue("taskId", taskId);
-        
+
         await cmd.ExecuteNonQueryAsync();
     }
 
@@ -152,13 +157,19 @@ public class TaskRepo
 
         var sql = @"
         UPDATE tasks 
-        SET name=@name, start_date=@startdate, deadline=@deadline, 
-            completion_date=@completiondate, status=@status, project_id=@projectid 
+        SET name=@name,
+            description=@description,
+            start_date=@startdate,
+            deadline=@deadline,
+            completion_date=@completiondate,
+            status=@status,
+            project_id=@projectid
         WHERE task_id=@tid";
 
         await using var cmd = new NpgsqlCommand(sql, conn);
 
         cmd.Parameters.AddWithValue("name", task.Name);
+        cmd.Parameters.AddWithValue("description", (object?)task.Description ?? DBNull.Value);
         cmd.Parameters.AddWithValue("startdate", (object?)task.StartDate ?? DBNull.Value);
         cmd.Parameters.AddWithValue("deadline", (object?)task.Deadline ?? DBNull.Value);
         cmd.Parameters.AddWithValue("completiondate", (object?)task.CompletionDate ?? DBNull.Value);
