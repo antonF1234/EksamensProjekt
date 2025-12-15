@@ -19,13 +19,41 @@ else if (groupedTasks.Count == 0)
 }
 else
 {
-    @foreach (var group in groupedTasks)
+    <div class="d-flex gap-3 mb-3">
+    
+    <!-- Filtrer efter projekt -->
+    <select class="form form-select" style="max-width:200px"@bind="filterProjectId">
+    <option value="">Alle Projekter</option>
+    @foreach (var g in groupedTasks)
+    {
+        <option value="@g.Project?.ProjectId">@g.Project?.Name</option>
+    }
+    </select>  
+    
+    <!-- Filtrer efter status -->
+    <select class="form-select" style="max-width:200px" @bind="filterStatus">
+        <option value="">Alle Statusser</option>
+        <option value="Igang">Igang</option>
+        <option value="Færdig">Færdig</option>
+        <option value="På vent">På vent</option>
+        <option value="Afbrudt">Afbrudt</option>
+    </select>
+    
+    <!-- Sortér -->
+    <select class="form-select" style="max-width:200px" @bind="sortBy">
+        <option value="deadline">Deadline</option>
+        <option value="status">Status</option>
+    </select>
+
+    </div>
+    
+    @foreach (var group in GetVisibleGroups())
     {
         <!-- ✔️ RIGTIG OVERSKRIFT: Projektnavn fra /api/{id} -->
         <h4 class="mt-4">@group.Project?.Name</h4>
 
         <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4">
-            @foreach (var t in group.Tasks)
+            @foreach (var t in GetVisibletasks(group))
             {
                 <div class="col">
                     <div class="card h-100 shadow-sm border-primary">
@@ -135,5 +163,45 @@ else
     {
         public ProjectModel? Project { get; set; }
         public List<UsersTasksModel> Tasks { get; set; } = new();
+    }
+
+    private string? filterProjectId = "";
+    private string? filterStatus = "";
+    private string sortBy = "deadline";
+    
+    // Returnér kun de grupper der matcher filtre
+    private IEnumerable<ProjectGroup> GetVisibleGroups()
+    {
+        var result = groupedTasks.AsEnumerable();
+
+        if (!string.IsNullOrEmpty(filterProjectId))
+        {
+            int id = int.Parse(filterProjectId);
+            result = result.Where(g => g.Project?.ProjectId == id);
+        }
+
+        return result;
+    }
+    
+    // Returnér kun tasks der matcher filtre og sortering
+    private IEnumerable<UsersTasksModel> GetVisibletasks(ProjectGroup group)
+    {
+        var result = group.Tasks.AsEnumerable();
+        
+        //filtrer på status
+        if (!string.IsNullOrEmpty(filterStatus))
+            result = result.Where(t => t.Status == filterStatus);
+        
+        //Sortering
+        result = sortBy switch
+        {
+
+            "deadline" => result.OrderBy(t => t.Deadline),
+            "status" => result.OrderBy(t => t.Status),
+            _ => result //brug listen som den allerede er (ingen sortering)
+                        // → det er det _ => result gør. Det er en default, hvis de andre ikke passer. En switch expression
+        };
+
+        return result;
     }
 }
