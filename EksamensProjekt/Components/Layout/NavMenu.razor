@@ -12,6 +12,10 @@
         @if (string.IsNullOrEmpty(username))
         {
             <p>Du er ikke logget ind</p>
+            <NavLink class="btn btn-light w-60" href="login">
+                <i class="bi bi-box-arrow-right me-2"></i> Login
+            </NavLink>
+
         }
         else if (isAdmin)
         {
@@ -56,10 +60,12 @@
     </nav>
 
     <hr class="my-3">
-
-    <button class="btn btn-danger w-60" @onclick="Logout">
-        <i class="bi bi-box-arrow-right me-2"></i> Logout
-    </button>
+    @if (!string.IsNullOrEmpty(username))
+    {
+        <button class="btn btn-danger w-60" @onclick="Logout">
+            <i class="bi bi-box-arrow-right me-2"></i> Logout
+        </button>
+    }
     <p2>Velkommen @username</p2>
     @if (isAdmin)
     {
