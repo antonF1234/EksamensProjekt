@@ -8,7 +8,6 @@ var builder = WebApplication.CreateBuilder(args);
 
 
 builder.Services.AddSingleton<UserRepo>();
-builder.Services.AddScoped<AuthState>();
 builder.Services.AddScoped<ProjectService>();
 builder.Services.AddScoped<ProjectRepo>();
 builder.Services.AddBlazoredLocalStorage();
