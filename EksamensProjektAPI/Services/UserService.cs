@@ -40,7 +40,4 @@ public class UserService
     {
         return await _repo.GetAllUsersAsync();
     }
-
-
-
 }

@@ -22,14 +22,17 @@ public class TimeRecordsController : ControllerBase
     }
 
     [HttpPost("startrecord/{userid}/{taskid}")]
-    public async Task StartTimeRecording(int userid, int taskid)
+    public async Task<IActionResult> StartTimeRecording(int userid, int taskid)
     {
-      await _service.StartTimeRecording(userid, taskid);  
+        await _service.StartTimeRecording(userid, taskid);
+        return Ok();
     }
 
     [HttpPost("endrecord/{userid}/{taskid}")]
-    public async Task EndTimeRecording(int userid, int taskid)
+    public async Task<IActionResult> EndTimeRecording(int userid, int taskid)
     {
         await _service.EndTimeRecording(userid, taskid);
+        return Ok();
     }
+
 }
