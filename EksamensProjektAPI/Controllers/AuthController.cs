@@ -1,6 +1,5 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using EksamensProjekt.Models;
-using EksamensProjektAPI.Services;
 
 namespace EksamensProjektAPI.Controllers;
 

@@ -6,9 +6,6 @@
 @inject Blazored.LocalStorage.ILocalStorageService LS
 @rendermode InteractiveServer
 @inject HttpClient Http
-@inject IJSRuntime JS
-
-@inject SkillRepo _Skill
 
 <h3>Skills</h3>
 
@@ -24,11 +21,11 @@
 </EditForm>
 
 @code {
-    public SkillModel newSkill = new();
+    private SkillModel newSkill = new();
 
     private async Task CreateSkill()
     {
-        await _Skill.InsertAsync(newSkill);
+        await Http.PostAsJsonAsync("api/skills/create", newSkill);
         newSkill = new SkillModel();
         await LoadSkills();
     }

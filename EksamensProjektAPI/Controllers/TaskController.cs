@@ -1,6 +1,4 @@
 using Microsoft.AspNetCore.Mvc;
-
-using Microsoft.AspNetCore.Mvc; //giver [HttpGet, HttpPost], ok(), NotFound()
 using EksamensProjekt.Models; // vores ProjectModel
 using EksamensProjektAPI.Services; //vores Projectservice
 

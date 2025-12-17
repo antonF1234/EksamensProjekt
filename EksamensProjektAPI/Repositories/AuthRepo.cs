@@ -36,13 +36,14 @@ public class AuthRepo
         await conn.OpenAsync();
 
         await using var cmd = new NpgsqlCommand(
-            "INSERT INTO users (username, password, email, is_admin) VALUES (@username, @password, @email, @isadmin)",
+            "INSERT INTO users (username, password, email, is_admin) VALUES (@username, @password, @email, @is_admin)",
             conn);
+
         cmd.Parameters.AddWithValue("username", user.Username);
         cmd.Parameters.AddWithValue("password", user.Password);
         cmd.Parameters.AddWithValue("email", user.Email);
         cmd.Parameters.AddWithValue("is_admin", user.IsAdmin);
-
+        
         await cmd.ExecuteNonQueryAsync();
     }
 }
