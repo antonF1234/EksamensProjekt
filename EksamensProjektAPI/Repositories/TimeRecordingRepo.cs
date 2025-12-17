@@ -5,12 +5,12 @@ namespace EksamensProjektAPI.Repositories;
 
 public class TimeRecordingsRepo
 {
-    private string Conn => DbConnectionInfo.ConnectionString;
+    private string Conn => DbConnectionInfo.ConnectionString; // tag connection string fra DbConnectionInfo klassen
 
-    public async Task<List<TimeRecordingModel>> GetAllForUserAsync(int userId)
+    public async Task<List<TimeRecordingModel>> GetAllForUserAsync(int userId) // brug userId til at finde alle time recordings for en bruger
     {
-        await using var conn = new NpgsqlConnection(Conn);
-        await conn.OpenAsync();
+        await using var conn = new NpgsqlConnection(Conn); // bruger connection string fra DbConnectionInfo
+        await conn.OpenAsync(); // åbner forbindelsen
 
         var sql = @"
             SELECT 
@@ -28,16 +28,16 @@ public class TimeRecordingsRepo
             ORDER BY tr.start_time DESC;
         ";
 
-        await using var cmd = new NpgsqlCommand(sql, conn);
-        cmd.Parameters.AddWithValue("uid", userId);
+        await using var cmd = new NpgsqlCommand(sql, conn); // kør query
+        cmd.Parameters.AddWithValue("uid", userId); // brug userId som parameter fra funktionen
 
-        await using var reader = await cmd.ExecuteReaderAsync();
+        await using var reader = await cmd.ExecuteReaderAsync(); // læs indholdet af resultatet
 
-        var list = new List<TimeRecordingModel>();
+        var list = new List<TimeRecordingModel>(); // initialiserer en liste af TimeRecordingModel's
 
-        while (await reader.ReadAsync())
+        while (await reader.ReadAsync()) // gå igennem hvert row i resultatet
         {
-            list.Add(new TimeRecordingModel
+            list.Add(new TimeRecordingModel // tilføj hvert row til listen af TimeRecordingModel's
             {
                 TimeRecordId = reader.GetInt32(0),
                 UserId = reader.GetInt32(1),
@@ -49,7 +49,7 @@ public class TimeRecordingsRepo
             });
         }
 
-        return list;
+        return list; // returner listen
     }
 
     public async Task StartTimeRecording(int userId, int taskId)
@@ -78,14 +78,14 @@ public class TimeRecordingsRepo
         await using var conn = new NpgsqlConnection(Conn);
         await conn.OpenAsync();
 
-        await using var cmd = new NpgsqlCommand(
+        await using var cmd = new NpgsqlCommand( // opdater end_time og sum_of_time_second for den valgte bruger og task.
             "UPDATE time_recording SET end_time = NOW(), sum_of_time_second = EXTRACT(EPOCH FROM (NOW() - start_time))::INT WHERE user_id = @userid AND task_id = @taskid AND end_time IS NULL",
-            conn);
+            conn); // Bruger EPOCH til at beregne tiden i sekunder.
 
-        cmd.Parameters.AddWithValue("userid", userId);
-        cmd.Parameters.AddWithValue("taskid", taskId);
+        cmd.Parameters.AddWithValue("userid", userId); // bruger id som parameter
+        cmd.Parameters.AddWithValue("taskid", taskId); // task id som parameter
 
-        await cmd.ExecuteNonQueryAsync();
+        await cmd.ExecuteNonQueryAsync(); // kør query
     }
 
 }
