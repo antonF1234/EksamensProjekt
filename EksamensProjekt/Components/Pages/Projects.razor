@@ -9,6 +9,7 @@
 
 @inject ProjectRepo _Projects
 
+<!--FORM TIL OPRETTELSE AF PROJEKT-->
 <EditForm Model="newProject" OnValidSubmit="CreateProject">
     <DataAnnotationsValidator />
     <div class="mb-3">
@@ -41,21 +42,22 @@
 
 @code {
 
-    private ProjectModel newProject = new();
+    private ProjectModel newProject = new(); // Objekt der bindes til opret-projekt-formen
 
-    private async Task CreateProject()
+
+    private async Task CreateProject() // Opretter et nyt projekt og gemmer det i databasen
     {
-        int uid = await LS.GetItemAsync<int>("userid");
-        await _Projects.InsertAsync(newProject, uid);
-        newProject = new ProjectModel();
-        await LoadProjects();
+        int uid = await LS.GetItemAsync<int>("userid"); // Henter bruger-ID fra LocalStorage
+        await _Projects.InsertAsync(newProject, uid); // Indsætter projekt i databasen
+        newProject = new ProjectModel(); // Nulstiller formularen
+        await LoadProjects(); // Genindlæser projektlisten
     }
 
 }
 
 <h3 class="mb-4">Alle projekter</h3>
 
-
+<!--VISNING AF PROJEKTER-->
 @if (projects == null)
     
 {
@@ -113,7 +115,7 @@ else
     </div>
 }
 
-
+<!--TASK MODAL-->
 @if (showTaskModal && selectedProject != null)
 {
     <div class="modal-backdrop" @onclick="CloseTaskModal"></div>
@@ -146,6 +148,7 @@ else
     </div>
 }
 
+<!--OPDATER PROJEKT MODAL-->
 @if (showProjectUpdateModal && selectedProject != null)
 {
     <div class="modal-backdrop" @onclick="CloseUpdateProjectModal"></div>
@@ -181,14 +184,14 @@ else
 }
 
 
-@code {
+@code { // UI-state
     private bool showTaskModal = false;
     private bool showProjectUpdateModal = false;
-    private ProjectModel? selectedProject;
-    private List<TaskModel> projectTasks = new();
+    private ProjectModel? selectedProject; // Valgt projekt
+    private List<TaskModel> projectTasks = new(); // Tasks til valgt projekt
     
 
-    private async Task DeleteProject(int pid) //tager projectid (Ln 99, bt class DeleteP) og kalder endpoint
+    private async Task DeleteProject(int pid) // Sletter et projekt efter brugerbekræftelse
     {
         bool confirmed = await JS.InvokeAsync<bool>("confirm", "Er du sikker på du vil slette dette projekt");
         if (confirmed) //pop up vindue
@@ -198,7 +201,8 @@ else
         }
     }
     
-    private async Task OpenTaskModal(ProjectModel project)
+    // Åbner modal og henter tasks for et projekt
+    private async Task OpenTaskModal(ProjectModel project) 
     {
         selectedProject = project;
         showTaskModal = true;
@@ -225,7 +229,7 @@ else
         if (selectedProject != null)
         {
             await _Projects.UpdateAsync(selectedProject);
-            await LoadProjects();
+            await LoadProjects(); //genindlæs projektet
             selectedProject = null;
             CloseUpdateProjectModal();
         }
@@ -241,14 +245,14 @@ else
     
     protected override async Task OnInitializedAsync()
     {
-        await LoadProjects();
+        await LoadProjects(); //genindlæs projektet
     }
     
     // Liste med alle projekter fra databasen
     private List<ProjectModel> projects = new();
     
     // Henter projekter fra API’et (bliver brugt flere gange)
-    private async Task LoadProjects()
+    private async Task LoadProjects() 
     {
         projects = await Http.GetFromJsonAsync<List<ProjectModel>>("api/all");
         if (projects == null)
