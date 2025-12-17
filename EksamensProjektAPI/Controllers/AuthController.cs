@@ -21,11 +21,12 @@ public class AuthController : ControllerBase
         if (loggedInUser is null) 
             return Unauthorized();
 
-        return Ok(new 
+        return Ok(new UserModel()
         { 
-            loggedInUser.UserId, 
-            loggedInUser.Username, 
-            loggedInUser.IsAdmin 
+            UserId = loggedInUser.UserId,
+            Username = loggedInUser.Username,
+            Email = loggedInUser.Email,
+            IsAdmin = loggedInUser.IsAdmin,            
         });
     }
 
