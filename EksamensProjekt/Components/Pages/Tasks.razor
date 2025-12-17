@@ -80,45 +80,64 @@
 else
 {
     @foreach (var taskGroup in groupedTasks)
-    {
-        <h4 class="mt-4">@taskGroup.Project?.Name</h4>
-
-        @foreach (var task in taskGroup.Tasks)
-        {
-            <div class="card mb-3">
-                <div class="card-body">
-                    <h5 class="card-title">@task.Name</h5>
-                    <p class="card-text">@task.Description</p>
-                    <ul class="list-unstyled mb-0">
-                        <li><strong>Start:</strong> @task.StartDate</li>
-                        <li><strong>Deadline:</strong> @task.Deadline</li>
-                        <li><strong>Completed:</strong> @task.CompletionDate</li>
-                        <li><strong>Status:</strong> @task.Status</li>
-                    </ul>
-
-                    @if (taskUsersMap.ContainsKey(task.TaskId))
+{
+    <div class="card mb-4 shadow-sm">
+        <div class="card-header bg-info text-white">
+            <h4 class="mb-0">@taskGroup.Project?.Name</h4>
+        </div>
+        <div class="card-body">
+            @if (taskGroup.Tasks.Any())
+            {
+                <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-3">
+                    @foreach (var task in taskGroup.Tasks)
                     {
-                        <div class="mt-2">
-                            @foreach (var user in taskUsersMap[task.TaskId])
-                            {
-                                <span class="badge bg-primary me-1">
-                                    @user.Username
-                                    <button class="btn btn-sm btn-link text-white p-0 ms-1"
-                                            @onclick="() => DelUserFromTask(task.TaskId, user.UserId)">
-                                        ✕
-                                    </button>
-                                </span>
-                            }
+                        <div class="col">
+                            <div class="card h-100 border-secondary">
+                                <div class="card-body d-flex flex-column">
+                                    <h5 class="card-title">@task.Name</h5>
+                                    <p class="card-text">@task.Description</p>
+                                    <ul class="list-unstyled mb-2">
+                                        <li><strong>Start:</strong> @task.StartDate</li>
+                                        <li><strong>Deadline:</strong> @task.Deadline</li>
+                                        <li><strong>Completed:</strong> @(task.CompletionDate.HasValue ? task.CompletionDate.Value.ToShortDateString() : "-")</li>
+                                        <li><strong>Status:</strong> @task.Status</li>
+                                    </ul>
 
+                                    @if (taskUsersMap.ContainsKey(task.TaskId))
+                                    {
+                                        <div class="mb-2">
+                                            @foreach (var user in taskUsersMap[task.TaskId])
+                                            {
+                                                <span class="badge bg-primary me-1">
+                                                    @user.Username
+                                                    <button class="btn btn-sm btn-link text-white p-0 ms-1"
+                                                            @onclick="() => DelUserFromTask(task.TaskId, user.UserId)">
+                                                        ✕
+                                                    </button>
+                                                </span>
+                                            }
+                                        </div>
+                                    }
+
+                                    <div class="mt-auto d-flex gap-2">
+                                        <button class="btn btn-primary btn-sm" @onclick="() => OpenUpdateTaskModal(task)">Updater</button>
+                                        <button class="btn btn-danger btn-sm" @onclick="() => DeleteTask(task.TaskId)">Slet</button>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                     }
-
-                    <button class="btn btn-primary btn-sm mt-2" @onclick="() => OpenUpdateTaskModal(task)">Updater</button>
-                    <button class="btn btn-danger btn-sm mt-2" @onclick="() => DeleteTask(task.TaskId)">Slet</button>
                 </div>
-            </div>
-        }
-    }
+            }
+            else
+            {
+                <p class="text-muted">Ingen opgaver i dette projekt.</p>
+            }
+        </div>
+    </div>
+}
+
+
 }
 
 <!-- Modal til opdatering af task -->
