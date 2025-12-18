@@ -9,11 +9,11 @@
 
 <h3>Mine Opgaver</h3>
 
-@if (!isLoaded)
+@if (!isLoaded) // bool check at det er indlæst
 {
     <p>Henter opgaver...</p>
 }
-else if (groupedTasks.Count == 0)
+else if (groupedTasks.Count == 0) // hvis ingen groupedTasks findes så skriv
 {
     <div class="alert alert-info">Der er ingen opgaver</div>
 }
@@ -22,11 +22,11 @@ else
     <div class="d-flex gap-3 mb-3">
     
     <!-- Filtrer efter projekt -->
-    <select class="form form-select" style="max-width:200px"@bind="filterProjectId">
+    <select class="form form-select" style="max-width:200px"@bind="filterProjectId"> <!-- den valgte projekt id sættes til denne variabel -->
     <option value="">Alle Projekter</option>
     @foreach (var g in groupedTasks)
     {
-        <option value="@g.Project?.ProjectId">@g.Project?.Name</option>
+        <option value="@g.Project?.ProjectId">@g.Project?.Name</option> <!-- Skriv alle projekt navne ud som dropdown -->
     }
     </select>  
     
@@ -39,7 +39,7 @@ else
         <option value="Afbrudt">Afbrudt</option>
     </select>
     
-    <!-- Sortér -->
+    <!-- Sorter -->
     <select class="form-select" style="max-width:200px" @bind="sortBy">
         <option value="deadline">Deadline</option>
         <option value="status">Status</option>
@@ -47,12 +47,12 @@ else
 
     </div>
     
-    @foreach (var group in GetVisibleGroups())
+    @foreach (var group in GetVisibleGroups()) // går igennem hvert group objekt
     {
-        <h4 class="mt-4">@group.Project?.Name</h4>
+        <h4 class="mt-4">@group.Project?.Name</h4> <!-- Skriv projekt navn ud -->
 
-        <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4">
-            @foreach (var t in GetVisibletasks(group))
+        <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4"> 
+            @foreach (var t in GetVisibletasks(group)) // for hvert UsersTasksModel i hvert group objekt skriv de ud
             {
                 <div class="col">
                     <div class="card h-100 shadow-sm border-primary">
@@ -61,11 +61,11 @@ else
                             <h6 class="card-subtitle mb-2 text-muted">Task ID: @t.TaskId</h6>
 
                             <p><strong>Status:</strong>
-                                <span class="badge @(t.Status == "Færdig" ? "bg-success" : t.Status == "Igang" ? "bg-warning" : "bg-secondary")">
+                                <span class="badge @(t.Status == "Færdig" ? "bg-success" : t.Status == "Igang" ? "bg-warning" : "bg-secondary")"> <!-- s -->
                                     @t.Status
                                 </span>
                             </p>
-
+                            <!-- Status dropdown til updatering af status på task -->
                             <select class="form-select mb-2"
                                     @onchange="@(e => OpdaterStatus(t.TaskId, e.Value?.ToString()))">
                                 <option value="">--Vælg status--</option>
@@ -74,7 +74,7 @@ else
                                 <option value="På vent" selected="@(t.Status=="På vent")">På vent</option>
                                 <option value="Afbrudt" selected="@(t.Status=="Afbrudt")">Afbrudt</option>
                             </select>
-
+                            <!-- Tjekker at de ikke er tomme og skriver ud datoer -->
                             @if (t.StartDate.HasValue)
                             {
                                 <p><strong>Start:</strong> @t.StartDate.Value.ToString("dd/MM/yyyy")</p>
@@ -96,38 +96,38 @@ else
 }
 
 @code {
-    private List<UsersTasksModel> tasks = new();
-    private List<ProjectGroup> groupedTasks = new();
-    private int userId;
-    private bool isLoaded = false;
+    private List<UsersTasksModel> tasks = new(); // instansier ny liste med UsersTasksModel's
+    private List<ProjectGroup> groupedTasks = new(); // instansier ny list med ProjectGroup bruges kun på denne side
+    private int userId; // user id til localstorage og api calls
+    private bool isLoaded = false; // bool til loaded status
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
         if (firstRender)
         {
-            userId = await LS.GetItemAsync<int>("userid");
+            userId = await LS.GetItemAsync<int>("userid"); // henter bruger id fra localstorage
 
             // Hent alle brugerens tasks
             tasks = await Http.GetFromJsonAsync<List<UsersTasksModel>>(
                 $"api/userstasks/getuserstasks/{userId}"
-            ) ?? new List<UsersTasksModel>();
+            ) ?? new List<UsersTasksModel>(); // hvis API ikke returnere noget så lav en tom liste
 
-            // Gruppér og hent projektinfo
+            // Grupper og hent projektinfo
             await GroupTasksByProject();
 
-            isLoaded = true;
+            isLoaded = true; // ændre bool til true efter await GroupTasksByProject
             StateHasChanged();
         }
     }
 
-    private async Task GroupTasksByProject()
+    private async Task GroupTasksByProject() // metode til at gruppere tasks for projekter
     {
-        groupedTasks.Clear();
+        groupedTasks.Clear(); // slet gammelt data
 
-        // Find alle unikke projekt IDs
+        // Find alle unikke projekt IDs andvender .Distinct metode til det
         var projectIds = tasks.Select(t => t.ProjectId).Distinct();
 
-        foreach (var projectId in projectIds)
+        foreach (var projectId in projectIds) // Foreach lykke til at kalde endpoint med alle unikke projekt id'er for at hente dataen
         {
             // Hent projektinfo via /api/{id}
             var project = await Http.GetFromJsonAsync<ProjectModel>($"api/{projectId}");
@@ -141,12 +141,12 @@ else
         }
     }
 
-    private async Task OpdaterStatus(int taskId, string status)
+    private async Task OpdaterStatus(int taskId, string status) // metode til at opdatere status på en opgave
     {
-        if (string.IsNullOrEmpty(status)) return;
-
+        if (string.IsNullOrEmpty(status)) return; // hvis status er tom retuner intet / gør intet
+                                                // ellers kald api med nye status og dets task id
         var response = await Http.PutAsync($"/api/tasks/updatestatus/{taskId}/{status}", null);
-
+        // hvis respone er ok altså 200-299 så gå videre
         if (response.IsSuccessStatusCode)
         {
             var task = tasks.FirstOrDefault(t => t.TaskId == taskId);
@@ -158,32 +158,31 @@ else
         StateHasChanged();
     }
 
-    public class ProjectGroup
+    public class ProjectGroup // ny model som indeholder vores ProjectModel og UsersTasksModel
     {
         public ProjectModel? Project { get; set; }
         public List<UsersTasksModel> Tasks { get; set; } = new();
     }
 
-    private string? filterProjectId = "";
+    private string? filterProjectId = ""; // 
     private string? filterStatus = "";
     private string sortBy = "deadline";
     
-    // Returnér kun de grupper der matcher filtre
-    private IEnumerable<ProjectGroup> GetVisibleGroups()
+    // Returner kun de grupper der matcher filtre
+    private List<ProjectGroup> GetVisibleGroups()
     {
-        var result = groupedTasks.AsEnumerable();
+        if (string.IsNullOrEmpty(filterProjectId))
+            return groupedTasks.ToList();
 
-        if (!string.IsNullOrEmpty(filterProjectId))
-        {
-            int id = int.Parse(filterProjectId);
-            result = result.Where(g => g.Project?.ProjectId == id);
-        }
-
-        return result;
+        int id = int.Parse(filterProjectId);
+        return groupedTasks
+            .Where(g => g.Project?.ProjectId == id)
+            .ToList();
     }
+
     
-    // Returnér kun tasks der matcher filtre og sortering
-    private IEnumerable<UsersTasksModel> GetVisibletasks(ProjectGroup group)
+    // Returner kun tasks der matcher filtre og sortering
+    private IEnumerable<UsersTasksModel> GetVisibletasks(ProjectGroup group) // det er IEnumerable da vi kalder det i foreach lykken
     {
         var result = group.Tasks.AsEnumerable();
         
