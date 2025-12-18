@@ -7,25 +7,28 @@
 
 <h3>Login</h3>
 
+<!-- Almindelig formular – men vi stopper den normale submit med preventDefault, som skaber bedre brugeroplevelse -->
 <form @onsubmit="DoLogin" @onsubmit:preventDefault="true" class="login-form">
     <div class="form-group">
         <label for="username">Brugernavn</label>
+        <!-- Binder input til variablen username – når man skriver, opdateres den automatisk -->
         <input id="username" @bind="username" placeholder="Brugernavn" />
     </div>
 
     <div class="form-group">
         <label for="password">Kode</label>
+        <!-- type="password" gør at kodeordet vises som prikker -->
         <input id="password" type="password" @bind="password" placeholder="Kode" />
     </div>
-
+    <!-- Når man trykker her, kører DoLogin-metoden nedenfor -->
     <button type="submit">Login</button>
 </form>
-
+<!-- Hvis der er en fejlmeddelelse, så vis den i rød tekst -->
 @if (!string.IsNullOrEmpty(msg))
 {
     <p style="color:red;">@msg</p>
 }
-
+<!-- Lille toast-besked der dukker op når login lykkes -->
 @if (showToast)
 {
     <div class="side-toast">
@@ -34,44 +37,52 @@
 }
 
 @code {
-    private string username = string.Empty;
+    //variabler til at gemme hvad brugeren skriver
+    private string username = string.Empty; //starter tom
     private string password = string.Empty;
     private string msg = string.Empty;
     private bool showToast = false;
 
+    //denne metoder kører npr man trykker login
     private async Task DoLogin()
     {
+        //rydder tidligere fejlmeddelse
         msg = string.Empty;
 
+        // sender brugernavn og kode til backend med Post til vores sti "api/auth..."
+        // vi pakker det ind i et userModel objekt
         var response = await Http.PostAsJsonAsync("api/auth/login", new UserModel
         {
             Username = username,
             Password = password
         });
 
+        //hvis serveren siger nej så vi fejlmeddelse
         if (!response.IsSuccessStatusCode)
         {
             msg = "Forkert brugernavn eller kode";
-            return;
+            return; //stopper her
         }
 
+        // hvis det gik godt så læser den svaret fra serveren, brugerens data
         var userData = await response.Content.ReadFromJsonAsync<UserModel>();
+        // hvis fejl og ingen data returneret
         if (userData == null)
         {
             msg = "Noget gik galt";
             return;
         }
 
-        // Gem i local storage
+        // Gem i local storage, vores "hukommelse" i browseren
         await LS.SetItemAsync("loggedin", userData.Username);
         await LS.SetItemAsync("userid", userData.UserId);
         await LS.SetItemAsync("isadmin", userData.IsAdmin);
 
         // Vis toast
         showToast = true;
-        StateHasChanged(); // sørg for at toast renderes
+        StateHasChanged(); // sørg for at toast renderes med det samme
 
-        await Task.Delay(2000);
+        await Task.Delay(2000); // venter 2 sek så bruger kan nå at se besked
 
         showToast = false;
         StateHasChanged();

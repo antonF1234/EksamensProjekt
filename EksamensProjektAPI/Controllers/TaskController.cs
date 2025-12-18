@@ -15,12 +15,18 @@ public class TaskController : ControllerBase
         _taskService = taskservice; //gemmer servicen, så den kan bruges i metoden
     }
 
+    // POST: api/tasks/createtask/{projectId}
+    // Bruges når vi opretter en ny opgave fra Blazor-siden
     [HttpPost("createtask/{projectId}")]
     public async Task<IActionResult> Create(int projectId, [FromBody] TaskModel model)
     {
-        if (model == null) return BadRequest("Task is null");
+        // Tjekker om der overhovedet er sendt en opgave med (model er ikke tom)
+        if (model == null)
+        if (model == null) return BadRequest("Task is null"); // Sender fejlmeddelelse til frontend
+        // Kalder servicen, der gemmer opgaven i databasen og tilknytter den til det rigtige projekt
         await _taskService.CreateAsync(model, projectId);
-        return Ok(model);
+        // Sender den nye opgave tilbage til frontend
+        return Ok(model); // Status 200 + den nye opgave som JSON
     }
 
 
@@ -31,7 +37,7 @@ public class TaskController : ControllerBase
     public async Task<IActionResult> GetByProjectId(int pid)
     {
         var tasks = await _taskService.GetByProjectIdAsync(pid);
-        return Ok(tasks);
+        return Ok(tasks); // Sender listen af opgaver tilbage
     }
     
     [HttpGet("all")] 
@@ -85,7 +91,9 @@ public class TaskController : ControllerBase
         task.Status = model.Status;
         task.ProjectId = model.ProjectId;
         
+        // Gemmer ændringerne i databasen
         await _taskService.UpdateAsync(task);
+        
         return Ok();
     }
     
