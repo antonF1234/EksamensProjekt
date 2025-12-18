@@ -4,9 +4,10 @@ namespace EksamensProjektAPI.Repositories;
 
 public class UsersTasksRepo
 {
+    // henter connectionstring fra vores db connectioninfo klasse i API'et
     private string Conn => DbConnectionInfo.ConnectionString;
     
-    public async Task InsertAsync(int taskId, int userId)
+    public async Task InsertAsync(int taskId, int userId) // Tilføjer en kobling mellem en bruger og en opgave i users_tasks-tabellen
     {
         await using var conn = new NpgsqlConnection(Conn);
         await conn.OpenAsync();
@@ -18,9 +19,10 @@ public class UsersTasksRepo
         cmd.Parameters.AddWithValue("user_id", userId);
         cmd.Parameters.AddWithValue("task_id", taskId);
         
-        await cmd.ExecuteNonQueryAsync();
+        await cmd.ExecuteNonQueryAsync(); // Udfører insert-kommandoen
     }
 
+    // Henter alle opgaver en bestemt bruger er tilknyttet (med ekstra info fra tasks og users)
     public async Task<List<UsersTasksModel>> GetAllUserTasksAsync(int userId)
     {
         await using var conn = new NpgsqlConnection(Conn);
@@ -47,11 +49,11 @@ public class UsersTasksRepo
         cmd.Parameters.AddWithValue("uid", userId);
 
         await using var reader = await cmd.ExecuteReaderAsync();
-        var usersTasks = new List<UsersTasksModel>();
+        var usersTasks = new List<UsersTasksModel>(); // Laver en tom liste til resultatet
 
-        while (await reader.ReadAsync())
+        while (await reader.ReadAsync()) // Går igennem alle rækker fra databasen
         {
-            usersTasks.Add(new UsersTasksModel
+            usersTasks.Add(new UsersTasksModel // Fylder et UsersTasksModel-objekt med data fra hver række
             {
                 UserTaskId = reader.GetInt32(0),
                 UserId = reader.GetInt32(1),
@@ -69,7 +71,7 @@ public class UsersTasksRepo
         return usersTasks;
     }
     
-    public async Task<List<UserModel>> GetUsersByTaskIdAsync(int taskId)
+    public async Task<List<UserModel>> GetUsersByTaskIdAsync(int taskId) // Henter alle brugere der er tilknyttet en bestemt opgave
     {
         await using var conn = new NpgsqlConnection(Conn);
         await conn.OpenAsync();
@@ -86,7 +88,7 @@ public class UsersTasksRepo
         cmd.Parameters.AddWithValue("TaskId", taskId);
 
         await using var reader = await cmd.ExecuteReaderAsync();
-        while (await reader.ReadAsync())
+        while (await reader.ReadAsync()) // Læser hver række og laver UserModel
         {
             users.Add(new UserModel
             {
@@ -98,7 +100,7 @@ public class UsersTasksRepo
         return users;
     }
     
-    public async Task DelUserFromTask(int taskId, int userId)
+    public async Task DelUserFromTask(int taskId, int userId) // Fjerner koblingen mellem en bruger og en opgave
     {
         await using var conn = new NpgsqlConnection(Conn);
         await conn.OpenAsync();
@@ -110,6 +112,6 @@ public class UsersTasksRepo
         cmd.Parameters.AddWithValue("user_id", userId);
         cmd.Parameters.AddWithValue("task_id", taskId);
         
-        await cmd.ExecuteNonQueryAsync();
+        await cmd.ExecuteNonQueryAsync(); // Udfører slet-kommandoen
     }
 }
