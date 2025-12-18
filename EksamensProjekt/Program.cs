@@ -17,7 +17,7 @@ builder.Services.AddScoped<UsersSkillsService>();
 
 builder.Services.AddScoped(sp => new HttpClient
 {
-    BaseAddress = new Uri("https://gruppe6eksamensprojekt.azurewebsites.net/")
+    BaseAddress = new Uri("http://localhost:5223")
 });
 
 

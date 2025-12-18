@@ -4,35 +4,49 @@
 @rendermode InteractiveServer
 <h3>Opgaver i kalenderen</h3>
 
+<!-- Navigation til at skifte mellem måneder -->
 <div>
-    <button @onclick="PrevMonth">‹</button>
-    <span>@currentDate.ToString("MMMM yyyy")</span>
-    <button @onclick="NextMonth">›</button>
+    <button @onclick="PrevMonth">‹</button> <!-- Går til forrige måned -->
+    <span>@currentDate.ToString("MMMM yyyy")</span> <!-- Viser aktiv måned og år -->
+    <button @onclick="NextMonth">›</button> <!-- Går til næste måned -->
 </div>
 
-
 <div class="calendar">
+
+    <!-- Kalenderens ugedags-header -->
     <div class="calendar-header">
         @foreach (var day in Enum.GetValues(typeof(DayOfWeek)))
         {
-            <div class="calendar-day-header">@day.ToString().Substring(0,3)</div>
+            <!-- Viser forkortet ugedag (fx Mon, Tue) -->
+            <div class="calendar-day-header">
+                @day.ToString().Substring(0,3)
+            </div>
         }
     </div>
 
+    <!-- Kalenderens indhold -->
     <div class="calendar-body">
+
+        <!-- Tomme felter før månedens første dag (justering i ugen) -->
         @for (int i = 0; i < (int)new DateTime(currentDate.Year, currentDate.Month, 1).DayOfWeek; i++)
         {
             <div class="calendar-cell empty"></div>
         }
 
-        @for (int day = 1; day <= DateTime.DaysInMonth(currentDate.Year, currentDate.Month); day++)
+        <!-- Gennemløber alle dage i måneden -->
+        @for (int day = 1; day <= DateTime.DaysInMonth(currentDate.Year, currentDate.Month); day++) // lykke som kører for alle dage i månedet man er i
         {
             var date = new DateTime(currentDate.Year, currentDate.Month, day);
+
+            <!-- Filtrere opgaver der er aktive på den dato -->
             var dayTasks = tasks.Where(t =>
                 t.StartDate?.Date <= date && t.Deadline?.Date >= date).ToList();
 
+            <!-- En kalendercelle pr. dag -->
             <div class="calendar-cell">
-                <div class="date-number">@day</div>
+                <div class="date-number">@day</div> <!-- Dagsnummer -->
+
+                <!-- Viser alle opgaver for dagen -->
                 @foreach(var task in dayTasks)
                 {
                     <div class="task">@task.Name</div>
@@ -43,19 +57,25 @@
 </div>
 
 @code {
+    // Liste med alle opgaver
     private List<TaskModel> tasks = new List<TaskModel>();
+
+    // Den aktuelt viste måned
     private DateTime currentDate = DateTime.Now;
 
+    // Henter opgaver fra API ved initialisering
     protected override async Task OnInitializedAsync()
     {
         tasks = await Http.GetFromJsonAsync<List<TaskModel>>("/api/tasks/all");
     }
 
+    // Metode til forrige måned
     private void PrevMonth()
     {
         currentDate = currentDate.AddMonths(-1);
     }
 
+    // Metode til næste måned
     private void NextMonth()
     {
         currentDate = currentDate.AddMonths(1);
