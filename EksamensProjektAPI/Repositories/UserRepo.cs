@@ -4,24 +4,26 @@ using EksamensProjektAPI;
 
 public class UserRepo
 {
-    private string Conn => DbConnectionInfo.ConnectionString; // We use the DbConnectionInfo class to get the connection string
-
-    public async Task<UserModel?> GetByUsernameAsync(string username) // returns a user model if the username exists
+    private string Conn => DbConnectionInfo.ConnectionString; // Connection string hentes fra fælles DbConnectionInfo-klasse
+    
+    // Henter en bruger baseret på brugernavn. Retunerer UserModel hvis brugeren findes, ellers null.
+    public async Task<UserModel?> GetByUsernameAsync(string username) 
     {
-        await using var conn = new NpgsqlConnection(Conn); // set Postgre connection to conn
-        await conn.OpenAsync(); // open connection to database
+        await using var conn = new NpgsqlConnection(Conn); // Opretter og åbner forbindelse til PostgreSQL
+        await conn.OpenAsync(); 
 
+        // SQL-forespørgsel med parameter for at undgå SQL injection
         await using var cmd = new NpgsqlCommand(
             "SELECT user_id, username, password, email, is_admin FROM users WHERE username = @u LIMIT 1",
             conn);
-        cmd.Parameters.AddWithValue("u", username); // use username parameter from the function to get the user info
+        cmd.Parameters.AddWithValue("u", username); 
 
-        await using var reader = await cmd.ExecuteReaderAsync(); // execute the command with async
+        await using var reader = await cmd.ExecuteReaderAsync(); // Udfører forespørgslen
     
-        await reader.ReadAsync(); // read the response
-        if (reader.HasRows == false) return null; // if there are no rows return null
+        await reader.ReadAsync(); 
+        if (reader.HasRows == false) return null; // Returnerer null hvis brugeren ikke findes
 
-        return new UserModel // insert the gotten user info into the new user model
+        return new UserModel // Mapper database-rækken til UserModel
         {
             UserId = reader.GetInt32(0),
             Username = reader.GetString(1),
@@ -33,38 +35,40 @@ public class UserRepo
 
 
 
-    public async Task<bool> InsertAsync(UserModel user) // inserts a new user into the databasem using InsertAsync from UserRepo
+    public async Task<bool> InsertAsync(UserModel user) // Indsætter en ny bruger i databasen. Retunere True hvis indsættelsen lykkes.
     {
         
         await using var conn = new NpgsqlConnection(Conn);
         await conn.OpenAsync();
 
+        // SQL INSERT-kommando
         await using var cmd = new NpgsqlCommand(
             "INSERT INTO users (username, password, email, is_admin) VALUES (@u, @p, @e, @a)",
             conn);
-        cmd.Parameters.AddWithValue("u", user.Username); // use model username to insert into database
+        cmd.Parameters.AddWithValue("u", user.Username); 
         cmd.Parameters.AddWithValue("p", user.Password);
         cmd.Parameters.AddWithValue("e", user.Email);
         cmd.Parameters.AddWithValue("a", user.IsAdmin);
 
-        await cmd.ExecuteNonQueryAsync(); // execute the query
-        return true; // if the query is executed successfully return true, this is not used for now....
+        await cmd.ExecuteNonQueryAsync(); // Udfører kommandoen
+        return true; // Returneres pt. ikke brugt, men klar til validering
     }
 
-    public async Task<List<UserModel>> GetAllUsersAsync()
+    public async Task<List<UserModel>> GetAllUsersAsync() // Henter alle brugere fra databasen. Password returneres ikke af sikkerhedsmæssige årsager. Retunerer liste af brugere
     {
         var users = new List<UserModel>();
 
         await using var conn = new NpgsqlConnection(Conn);
         await conn.OpenAsync();
 
+        // SQL-forespørgsel der henter alle brugere uden password
         await using var cmd = new NpgsqlCommand(
             "SELECT user_id, username, email, is_admin FROM users",
             conn);
 
         await using var reader = await cmd.ExecuteReaderAsync();
 
-        while (await reader.ReadAsync())
+        while (await reader.ReadAsync()) // Mapper hver række til UserModel
         {
             users.Add(new UserModel
             {

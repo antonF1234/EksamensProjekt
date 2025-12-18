@@ -18,7 +18,7 @@ else
 {
     <table class="table table-striped">
         <thead>
-            <tr>
+            <tr> <!-- en række som er header -->
                 <th>Task</th>
                 <th>Bruger</th>
                 <th>Start</th>
@@ -27,13 +27,13 @@ else
             </tr>
         </thead>
         <tbody>
-            @foreach (var rec in records)
+            @foreach (var rec in records) // foreach lykke som går gennem alle recording for brugeren
             {
-                <tr>
+                <tr> <!-- Række til hvert enkelt record -->
                     <td>@rec.TaskName</td>
                     <td>@rec.UserName</td>
-                    <td>@rec.StartTime?.ToLocalTime().ToString("dd-MM-yyyy HH:mm")</td>
-                    <td>@rec.EndTime?.ToLocalTime().ToString("dd-MM-yyyy HH:mm")</td>
+                    <td>@rec.StartTime?.ToLocalTime().ToString("dd-MM-yyyy HH:mm")</td> <!-- formaterer datoen til en string og lokal tid-->
+                    <td>@rec.EndTime?.ToLocalTime().ToString("dd-MM-yyyy HH:mm")</td> <!-- formaterer datoen til en string og lokal tid-->
                     <td>@Calculate(rec.StartTime, rec.EndTime)</td>
                 </tr>
             }
@@ -42,11 +42,11 @@ else
 }
 
 <div class="mb-3">
-    <select class="form-select mb-2" @bind="selectedTaskId">
+    <select class="form-select mb-2" @bind="selectedTaskId"> <!-- Dropdown menu med alle opgaver-->
         <option value="0">--Vælg Opgave--</option>
-        @if (userTasks != null)
+        @if (userTasks != null) // tjekker at en bruger har opgaver hvis ja fortsæt
         {
-            @foreach (var task in userTasks)
+            @foreach (var task in userTasks) // foreach lykke til at vise all opgaver i dropdown menuen
             {
                 <option value="@task.TaskId">@task.TaskName</option>
             }
@@ -54,56 +54,56 @@ else
     </select>
 
 
-    <button class="btn btn-success me-2" @onclick="Start">▶️ Start tid</button>
-    <button class="btn btn-danger" @onclick="Stop">⏹ Stop tid</button>
+    <button class="btn btn-success me-2" @onclick="Start">▶️ Start tid</button> <!-- Start tid knappen -->
+    <button class="btn btn-danger" @onclick="Stop">⏹ Stop tid</button> <!-- Stop tid knappen -->
 </div>
 
 @code {
-    private List<TimeRecordingModel>? records;
-    private List<UsersTasksModel>? userTasks;
+    private List<TimeRecordingModel>? records; // listen af time records for din loggede ind bruger.
+    private List<UsersTasksModel>? userTasks; // listen af tasks som en bruger har 
     private int userId;
     private int selectedTaskId;
     private bool loaded = false;
 
-    protected override async Task OnAfterRenderAsync(bool firstRender)
+    protected override async Task OnAfterRenderAsync(bool firstRender) // venter på siden er renderet
     {
-        if (firstRender)
+        if (firstRender) // når siden er indlæst
         {
-            userId = await LS.GetItemAsync<int>("userid");
-            await LoadData();
-            loaded = true;
+            userId = await LS.GetItemAsync<int>("userid"); // hent user id
+            await LoadData(); // Load data som time records og user tasks
+            loaded = true; // ændre loaded bool til true
             StateHasChanged();
         }
     }
 
-    private async Task LoadData()
+    private async Task LoadData() // hent time records for en bruger og deres opgaver
     {
         records = await Http.GetFromJsonAsync<List<TimeRecordingModel>>($"api/timerecords/user/{userId}");
         userTasks = await Http.GetFromJsonAsync<List<UsersTasksModel>>($"api/userstasks/getuserstasks/{userId}");
     }
 
-    private string Calculate(DateTime? start, DateTime? end)
+    private string Calculate(DateTime? start, DateTime? end) // tids udregner funktion
     {
-        if (start == null || end == null) return "-";
-        var diff = end.Value - start.Value;
-        return $"{(int)diff.TotalHours} t {diff.Minutes} min {diff.Seconds} s";
+        if (start == null || end == null) return "-"; // tjekker hvis start eller slut er null så skriv "-"
+        var diff = end.Value - start.Value; // bruger diff til at finde tiden mellem 2 timestamps
+        return $"{(int)diff.TotalHours} t {diff.Minutes} min {diff.Seconds} s"; // retuner timer, minutter og sekunder
     }
 
-    private async Task Start()
+    private async Task Start() // start time record
     {
-        if (selectedTaskId == 0) return;
-        await Http.PostAsync($"api/timerecords/startrecord/{userId}/{selectedTaskId}", null);
-        await Reload();
+        if (selectedTaskId == 0) return; // hvis ingen opgave er valgt gør intet
+        await Http.PostAsync($"api/timerecords/startrecord/{userId}/{selectedTaskId}", null); // send bruger id og valgt task til endpoint
+        await Reload(); // kald genindlæs funktion
     }
 
-    private async Task Stop()
+    private async Task Stop() // stop time record
     {
-        if (selectedTaskId == 0) return;
-        await Http.PostAsync($"api/timerecords/endrecord/{userId}/{selectedTaskId}", null);
-        await Reload();
+        if (selectedTaskId == 0) return; // hvis ingen op er valgt gør intet
+        await Http.PostAsync($"api/timerecords/endrecord/{userId}/{selectedTaskId}", null); // send bruger id og valgt task til endpoint
+        await Reload(); // kald genindlæs funktion
     }
 
-    private async Task Reload()
+    private async Task Reload() // funktion til at hente alt data for siden
     {
         await LoadData();
         StateHasChanged();

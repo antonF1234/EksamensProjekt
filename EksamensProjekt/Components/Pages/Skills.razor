@@ -9,11 +9,11 @@
 
 <h3>Skills</h3>
 
-<EditForm Model="newSkill" OnValidSubmit="CreateSkill">
+<EditForm Model="newSkill" OnValidSubmit="CreateSkill"> <!-- form kalder CreateSkill funktion ved submit -->
     <DataAnnotationsValidator />
     <div class="mb-3">
         <label class="form-label">Navn</label>
-        <InputText class="form-control" @bind-Value="newSkill.Name" />
+        <InputText class="form-control" @bind-Value="newSkill.Name" /> <!-- Binder textinput felt til det nye instantieret SkillModel -->
     </div>
     <button class="btn btn-primary" type="submit">Opret Skill</button>
 
@@ -21,34 +21,34 @@
 </EditForm>
 
 @code {
-    private SkillModel newSkill = new();
+    private SkillModel newSkill = new(); // opret nyt instans af vores SkillModel ved navnet newSkill 
 
-    private async Task CreateSkill()
+    private async Task CreateSkill() // Tager udfyldt form objekt og sender det til vores endpoint
     {
-        await Http.PostAsJsonAsync("api/skills/create", newSkill);
-        newSkill = new SkillModel();
-        await LoadSkills();
+        await Http.PostAsJsonAsync("api/skills/create", newSkill); // await POST til endpointet
+        newSkill = new SkillModel(); // nulstiller alle værdier i objektet
+        await LoadSkills(); // hent alle skills fra databasen igen
     }
 }
 
 @if (skills == null)
     
 {
-    <p>Henter projekter fra databasen...</p>                 @* Vises mens vi venter på svar *@
+    <p>Henter projekter fra databasen...</p>  <!-- vises mens vi venter på svar-->
 }
 else if (skills.Count == 0)
-{
+{   // vises hvis der ikke er nogle skills i listen
     <div class="alert alert-info">Der er ingen skills endnu – opret det første ovenfor!</div>
 }
 else
 {
     <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4">
-        @foreach (var s in skills)
+        @foreach (var s in skills) // foreach lykke til alle skills i skills listen
         {
             <div class="col">
                 <div class="card h-100 shadow-sm">
                     <div class="card-body">
-                        <h5 class="card-title">@s.Name</h5> 
+                        <h5 class="card-title">@s.Name</h5>  <!-- Bare vis skill navnet -->
                     </div>
                 </div>
             </div>
@@ -58,19 +58,18 @@ else
 
 @code {
     
-    protected override async Task OnInitializedAsync()
+    protected override async Task OnInitializedAsync() // når siden indlæses kaldes denne
     {
-        await LoadSkills();
+        await LoadSkills(); // indlæs alle skills fra databasen vha. enpoint api/skills/allskills
     }
     
-    // Liste med alle projekter fra databasen
+    // Instantier ny liste med SkillModel objekter
     private List<SkillModel> skills = new();
     
-    // Henter projekter fra API’et (bliver brugt flere gange)
-    private async Task LoadSkills()
+    private async Task LoadSkills() // hent alle skills fra vores API
     {
         skills = await Http.GetFromJsonAsync<List<SkillModel>>("api/skills/allskills");
-        if (skills == null)
+        if (skills == null) // hvis der ingen skills er så bare lav en ny tom liste med SkillModel's
         {
             skills = new List<SkillModel>();
         }

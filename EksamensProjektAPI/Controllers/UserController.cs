@@ -10,16 +10,17 @@ public class UserController : ControllerBase
 {
     private readonly UserService _userService;
     
-    public UserController(UserService userService)
+    public UserController(UserService userService) // Service der indeholder forretningslogik for brugere
     {
-        _userService = userService;
+        _userService = userService; // Constructor med Dependency Injection af UserService.
     }
     
+    //Henter alle brugere fra systemet. Retunerer liste af brugere
     [HttpGet("allusers")]
     public async Task<IActionResult> GetAll()
     {
-        var users = await _userService.GetAllAsync();
-        if (users == null) return NotFound();
-        return Ok(users);                           // statuskode 200 + sender listen tilbage
+        var users = await _userService.GetAllAsync(); // Henter alle brugere via service-laget
+        if (users == null) return NotFound(); // Hvis ingen brugere findes returneres 404
+        return Ok(users); // Returnerer listen af brugere
     }
 }

@@ -5,34 +5,39 @@
 @rendermode InteractiveServer
 
 <h3>Register</h3>
+<!-- Inputfelter til registrering -->
 <input @bind="username" placeholder="Brugernavn" /><br />
 <input @bind="email" placeholder="Email" /><br />
 <input @bind="password" type="password" placeholder="Kode" /><br />
+<!-- Checkbox til admin-rettigheder -->
 <input type="checkbox" @bind="isAdmin" id="isAdminCheckbox" />
 <label for="isAdminCheckbox">Administrator</label><br />
+<!-- Opret bruger -->
 <button type="button" @onclick="RegisterUser">Opret</button>
 
 @inject HttpClient Http
 @inject NavigationManager Nav
 
 @code {
+    // Inputværdier bundet til UI
     string username = "";
     string email = "";
     string password = "";
     bool isAdmin = false;
 
-    async Task RegisterUser()
+    async Task RegisterUser() // Sender registreringsdata til API’et og opretter ny bruger
     {
-        var user = new UserModel
+        var user = new UserModel // Opretter UserModel baseret på input
         {
             Username = username,
             Email = email,
-            Password = password,
+            Password = password, // Password hashes i service-laget
             IsAdmin = isAdmin
         };
-
+        // Sender POST-request til AuthController
         var res = await Http.PostAsJsonAsync("api/auth/register", user);
 
+        // Hvis oprettelsen lykkes, genindlæses siden / navigeres videre
         if (res.IsSuccessStatusCode)
             NAV.NavigateTo(Nav.Uri, forceLoad: true);
     }

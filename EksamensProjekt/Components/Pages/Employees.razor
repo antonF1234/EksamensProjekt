@@ -6,7 +6,7 @@
 @rendermode InteractiveServer
 @inject HttpClient Http
 @inject IJSRuntime JS
-
+<!--TILFØJ SKILL TIL BRUGER-->
 <h3>Tilføj skill til bruger</h3>
 <div class="row mb-4">
     <div class="col-md-4">
@@ -18,6 +18,7 @@
             }
         </select>
     </div>
+    <!-- Vælg skill -->
     <div class="col-md-4">
         <select class="form-select" @bind="selectedSkillId">
             <option value="">Vælg skill...</option>
@@ -33,7 +34,7 @@
         </button>
     </div>
 </div>
-
+<!-- VISNING AF BRUGERE-->
 @if (users == null)
 {
     <p>Henter brugere fra databasen...</p>
@@ -43,7 +44,7 @@ else if (users.Count == 0)
     <div class="alert alert-info">Der er ingen brugere endnu – opret det første ovenfor!</div>
 }
 else
-{
+{ <!-- Brugere vises som kort -->
     <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4">
         @foreach (var u in users)
         {
@@ -53,14 +54,15 @@ else
                         <h5 class="card-title">@u.Username</h5>
                         <p class="card-text">@u.Email</p>
                         <p class="text-muted small">ID: @u.UserId</p>
-
-                        @if (userSkillsMap.ContainsKey(u.UserId))
+                        <!-- Brugerens skills -->
+                        @if (userSkillsMap.ContainsKey(u.UserId)) 
                         {
                             <div class="mt-2">
                                 @foreach (var skill in userSkillsMap[u.UserId])
                                 {
                                     <span class="badge bg-primary me-1">
                                         @skill.SkillName
+                                        <!-- Fjern skill -->
                                         <button class="btn btn-sm btn-link text-white p-0 ms-1"
                                                 @onclick="() => DeleteUserSkill(u.UserId, skill.SkillId)">
                                             ✕
@@ -78,22 +80,27 @@ else
     </div>
 }
 
-@code {
-    private List<UserModel> users = new();
-    private List<SkillModel> skills = new();
+@code { 
+    private List<UserModel> users = new(); // Liste over alle brugere
+    private List<SkillModel> skills = new(); // Liste over alle skills
 
+    // Valgte værdier fra dropdowns
     private int? selectedUserId;
     private int? selectedSkillId;
 
+    // Tilføj-knappen er kun aktiv når begge er valgt
     private bool CanAdd => selectedUserId.HasValue && selectedSkillId.HasValue;
 
+    // Mapping: UserId -> Liste af skills
     private Dictionary<int, List<UsersSkillsModel>> userSkillsMap = new();
 
+    // Kaldes automatisk når siden indlæses. Henter brugere, skills og koblinger mellem dem
     protected override async Task OnInitializedAsync()
     {
         await LoadUsers();
         await LoadAllSkills();
 
+        // Henter skills for hver bruger
         foreach (var u in users)
         {
             var skillsForUser = await Http.GetFromJsonAsync<List<UsersSkillsModel>>(
@@ -103,37 +110,40 @@ else
         }
     }
 
-
+    // Henter alle brugere fra API’et
     private async Task LoadUsers()
     {
         users = await Http.GetFromJsonAsync<List<UserModel>>("api/users/allusers") ?? new List<UserModel>();
     }
 
-    private async Task LoadAllSkills()
+    private async Task LoadAllSkills() // Henter alle skills fra API’et
     {
         skills = await Http.GetFromJsonAsync<List<SkillModel>>("api/skills/allskills") ?? new List<SkillModel>();
     }
 
-    private async Task AddSelectedSkill()
+    private async Task AddSelectedSkill() // Tilføjer valgt skill til valgt bruger
     {
         if (selectedUserId.HasValue && selectedSkillId.HasValue)
         {
+            // Opret relation mellem bruger og skill
             await Http.PostAsync($"api/usersskills/adduserskill/{selectedSkillId}/{selectedUserId}", null);
 
             // Nulstil dropdowns
             selectedUserId = null;
             selectedSkillId = null;
             
-            // genindlæs alt, mega ueffektivt men er ligeglad :=)
+            // Genindlæs data (simpel men ineffektiv løsning)
             users.Clear();
             userSkillsMap.Clear();
             await OnInitializedAsync();
         }
     }
+    // Fjerner en skill fra en bruger
     private async Task DeleteUserSkill(int userId, int skillId)
     {
         await Http.DeleteAsync(
             $"api/usersskills/deleteuserskill/{skillId}/{userId}");
+        // Genindlæs data
         users.Clear();
         userSkillsMap.Clear();
         await OnInitializedAsync();
